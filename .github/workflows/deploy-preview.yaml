@@ -127,7 +127,7 @@ jobs:
       - name: Add the service to the preview ingress
         shell: bash
         run: |
-          EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} -o json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
+          EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
 
           # If the preview ingress does not have the host name, add it.
           if [ "$EXIST" == "null" ] 
@@ -210,7 +210,7 @@ jobs:
       - name: Remove the host from the preview ingress
         shell: bash
         run: |
-          INDEX=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} -o json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
+          INDEX=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
 
           if [ "$INDEX" != "null" ] 
           then 
