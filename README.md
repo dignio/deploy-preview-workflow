@@ -1,2 +1,2 @@
-# deploy-preview-workflow
-A reusable workflow that can be used to create Deploy Previews.
+# workflows
+A public repository for reusable workflows.
