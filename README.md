@@ -9,6 +9,11 @@ A public repository for reusable workflows.
 For the descriptions of the different inputs and secrets, have a look at [.github/workflows/deploy-preview.yaml](.github/workflows/deploy-preview.yaml)
 
 ```yaml
+on:
+  # IMPORTANT: It has to have this in your workflow to actually work
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
 jobs:
   deploy-preview:
     uses: dignio/workflows/.github/workflows/deploy-preview.yaml@main
