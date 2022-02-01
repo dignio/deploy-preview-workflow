@@ -1,0 +1,223 @@
+name: Deploy preview
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+  workflow_call:
+    inputs:
+      app_name:
+        description: The application name. Use the same name as the Github and ECR repository.
+        required: true
+        type: string
+      service_type:
+        description: This is the service type to be used while generating manifests.
+        required: true
+        type: string
+        default: webservice
+      port:
+        description: This is the application port number.
+        required: true
+        type: number
+
+      # Optional inputs goes here
+      docker_build_args:
+        description: By using this you can add multi line build args to docker
+        required: false
+        type: string
+      path:
+        description: This is the index route to the application.
+        required: false
+        type: string
+        default: /
+  
+    # Secrets
+    secrets:
+      aws_access_key_id:
+        description: The AWS access key ID
+        required: true
+      aws_secret_access_key:
+        description: The AWS secret access key
+        required: true
+      kube_config:
+        description: The kube config for deployments
+        required: true
+      github_app_private_key:
+        description: The github app private key to be used for the preview link on PR generation
+        required: true
+
+# Predefined environment variables used as default values
+env:
+  REGION: eu-north-1
+  NAMESPACE: preview
+  INSTANCE: dev
+
+jobs:
+  build_push_deploy:
+    name: Build and push image to ECR
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+
+    steps:
+      # ===  Check out the current repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # ===  Get the latest git short sha
+      - name: Get the git short id
+        id: short_id
+        run: |
+          sha=$(cut -c 1-7 <<< $GITHUB_SHA)
+          echo "::set-output name=sha::$sha"
+
+      # === github.head_ref has to be used to get the branch name while in PR state
+      - name: Branch name to URL friendly string
+        shell: bash
+        # Example output: feat/MY-Branch-Name -> feat-my-branch-name
+        run: echo "BRANCH_NAME=$(echo ${{ github.head_ref }} | tr / - | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        uses: docker/build-push-action@v2
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.app_name }}
+        with:
+          push: true
+          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.BRANCH_NAME }}
+          cache-to: type=inline
+          build-args: ${{ inputs.docker_build_args }}
+          tags: |
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ env.BRANCH_NAME }}-preview-${{ steps.short_id.outputs.sha }}
+
+      - name: Deploy the service to Kubernetes
+        uses: dignio/deploy-service@v2
+        with:
+          app_name: ${{ inputs.app_name }}-${{ env.BRANCH_NAME }}-preview
+          service_type: ${{ inputs.service_type }}
+          namespace: ${{ env.NAMESPACE }}
+          docker_image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.app_name }}:${{ env.INSTANCE }}-${{ env.BRANCH_NAME }}-preview-${{ steps.short_id.outputs.sha }}
+          aws_region: ${{ env.REGION }}
+          replicas: 1
+          port: ${{ inputs.port }}
+          container_port: ${{ inputs.port }}
+          ingress: false
+
+          # Required secrets
+          AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
+          KUBE_CONFIG: ${{ secrets.kube_config }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v2.0
+        with:
+          version: "latest"
+        id: kubectl
+
+      # === This will run a kubectl request to 
+      # 1. fetch the index of the preview host to check the existence
+      # 2. if the host do not exist, patch the ingress with the new host
+      - name: Add the service to the preview ingress
+        shell: bash
+        run: |
+          EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress -n preview -o json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
+
+          # If the preview ingress does not have the host name, add it.
+          if [ "$EXIST" == "null" ] 
+          then 
+            echo "Creating a preview URL."
+
+            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress -n preview --type='json' -p='[ { "op":"add","path":"/spec/rules/-", "value": { "host": "${{ env.BRANCH_NAME }}.preview.dignio.dev", "http": { "paths": [ { "backend": { "service": { "name": "${{ inputs.app_name }}-${{ env.BRANCH_NAME }}-preview", "port": { "number": ${{ inputs.port }} } } }, "path": "/", "pathType": "Prefix" } ] } } } ]'
+          else 
+            echo "Preview URL already exists. Skipping." 
+          fi
+
+      # === Create a GitHub IAT token for the Dignio app.
+      # This is kind of stupid because the only reason we're doing
+      # this is to get a Dignio icon on the Preview check. Still,
+      # it'll look great.
+      - name: Create GitHub IAT token
+        uses: cybozu/octoken-action@v1
+        id: create-iat
+        with:
+          github_app_id: 100263
+          github_app_private_key: ${{ secrets.github_app_private_key }}
+          target_account: dignio
+
+      - name: Create a commit status with the Deploy Preview URL
+        uses: octokit/request-action@v2.x
+        id: create_commit_status
+        with:
+          name: "Kubernetes Deploy Preview"
+          description: Deploy Preview ready! Click Details to browse to it.
+          context: Preview
+          owner: dignio
+          repo: ${{ inputs.app_name }}
+          state: success
+          accept: application/vnd.github.v3+json
+          route: POST /repos/{owner}/{repo}/statuses/{sha}
+          target_url: https://${{ env.BRANCH_NAME }}.preview.dignio.dev
+          sha: ${{ github.event.pull_request.head.sha }}
+        env:
+          GITHUB_TOKEN: ${{ steps.create-iat.outputs.token }}
+
+  # === This is the teardown the preview process
+  teardown:
+    name: Teardown the preview
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      # === github.head_ref has to be used to get the branch name while in PR state
+      - name: Branch name to URL friendly string
+        shell: bash
+        # Example output: feat/MY-Branch-Name -> feat-my-branch-name
+        run: echo "BRANCH_NAME=$(echo ${{ github.head_ref }} | tr / - | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: ${{ env.REGION }}
+
+      - name: Authenticate with Kubernetes
+        uses: azure/k8s-set-context@v1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.kube_config }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v2.0
+        with:
+          version: "latest"
+        id: kubectl
+
+      # === This will delete all resources connected to the preview deployment
+      - name: Delete the deployment and service
+        shell: bash
+        run: ${{ steps.kubectl.outputs.kubectl-path }} delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ inputs.app_name }}-${{ env.BRANCH_NAME }}-preview -n ${{ env.NAMESPACE }}
+
+      # === This will run a kubectl request to 
+      # 1. fetch the index of the preview host
+      # 2. patch the ingress with what host to remove based on the index
+      - name: Remove the host from the preview ingress
+        shell: bash
+        run: |
+          INDEX=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress -n preview -o json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
+
+          if [ "$INDEX" != "null" ] 
+          then 
+            echo "Deleting host from preview ingress."
+
+            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress -n preview --type='json' -p='[ { "op":"remove","path":"/spec/rules/'"$INDEX"'" } ]'
+          fi
