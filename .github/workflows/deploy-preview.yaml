@@ -1,9 +1,6 @@
 name: Deploy preview
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize, closed]
-
   workflow_call:
     inputs:
       app_name:
