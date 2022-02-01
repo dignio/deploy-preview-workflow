@@ -91,10 +91,11 @@ jobs:
           ECR_REPOSITORY: ${{ inputs.app_name }}
         with:
           push: true
-          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.BRANCH_NAME }}
+          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.BRANCH_NAME }}-preview-latest
           cache-to: type=inline
           build-args: ${{ inputs.docker_build_args }}
           tags: |
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ env.BRANCH_NAME }}-preview-latest
             ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ env.BRANCH_NAME }}-preview-${{ steps.short_id.outputs.sha }}
 
       - name: Deploy the service to Kubernetes
