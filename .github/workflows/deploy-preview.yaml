@@ -127,14 +127,14 @@ jobs:
       - name: Add the service to the preview ingress
         shell: bash
         run: |
-          EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress -n preview -o json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
+          EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} -o json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
 
           # If the preview ingress does not have the host name, add it.
           if [ "$EXIST" == "null" ] 
           then 
             echo "Creating a preview URL."
 
-            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress -n preview --type='json' -p='[ { "op":"add","path":"/spec/rules/-", "value": { "host": "${{ env.BRANCH_NAME }}.preview.dignio.dev", "http": { "paths": [ { "backend": { "service": { "name": "${{ inputs.app_name }}-${{ env.BRANCH_NAME }}-preview", "port": { "number": ${{ inputs.port }} } } }, "path": "${{ inputs.path }}", "pathType": "Prefix" } ] } } } ]'
+            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress --namespace=${{ env.NAMESPACE }} --type='json' -p='[ { "op":"add","path":"/spec/rules/-", "value": { "host": "${{ env.BRANCH_NAME }}.preview.dignio.dev", "http": { "paths": [ { "backend": { "service": { "name": "${{ inputs.app_name }}-${{ env.BRANCH_NAME }}-preview", "port": { "number": ${{ inputs.port }} } } }, "path": "${{ inputs.path }}", "pathType": "Prefix" } ] } } } ]'
           else 
             echo "Preview URL already exists. Skipping." 
           fi
@@ -202,7 +202,7 @@ jobs:
       # === This will delete all resources connected to the preview deployment
       - name: Delete the deployment and service
         shell: bash
-        run: ${{ steps.kubectl.outputs.kubectl-path }} delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ inputs.app_name }}-${{ env.BRANCH_NAME }}-preview -n ${{ env.NAMESPACE }}
+        run: ${{ steps.kubectl.outputs.kubectl-path }} delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ inputs.app_name }}-${{ env.BRANCH_NAME }}-preview --namespace=${{ env.NAMESPACE }}
 
       # === This will run a kubectl request to 
       # 1. fetch the index of the preview host
@@ -210,11 +210,11 @@ jobs:
       - name: Remove the host from the preview ingress
         shell: bash
         run: |
-          INDEX=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress -n preview -o json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
+          INDEX=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} -o json  | jq '.spec.rules | map(.host == "${{ env.BRANCH_NAME }}.preview.dignio.dev") | index(true)')
 
           if [ "$INDEX" != "null" ] 
           then 
             echo "Deleting host from preview ingress."
 
-            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress -n preview --type='json' -p='[ { "op":"remove","path":"/spec/rules/'"$INDEX"'" } ]'
+            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress --namespace=${{ env.NAMESPACE }} --type='json' -p='[ { "op":"remove","path":"/spec/rules/'"$INDEX"'" } ]'
           fi
