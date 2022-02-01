@@ -134,7 +134,7 @@ jobs:
           then 
             echo "Creating a preview URL."
 
-            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress -n preview --type='json' -p='[ { "op":"add","path":"/spec/rules/-", "value": { "host": "${{ env.BRANCH_NAME }}.preview.dignio.dev", "http": { "paths": [ { "backend": { "service": { "name": "${{ inputs.app_name }}-${{ env.BRANCH_NAME }}-preview", "port": { "number": ${{ inputs.port }} } } }, "path": "/", "pathType": "Prefix" } ] } } } ]'
+            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress -n preview --type='json' -p='[ { "op":"add","path":"/spec/rules/-", "value": { "host": "${{ env.BRANCH_NAME }}.preview.dignio.dev", "http": { "paths": [ { "backend": { "service": { "name": "${{ inputs.app_name }}-${{ env.BRANCH_NAME }}-preview", "port": { "number": ${{ inputs.port }} } } }, "path": "${{ inputs.path }}", "pathType": "Prefix" } ] } } } ]'
           else 
             echo "Preview URL already exists. Skipping." 
           fi
