@@ -187,7 +187,7 @@ jobs:
         with:
           name: "${{ steps.app_name.outputs.full_name }} deploy preview"
           description: Deploy Preview ready! Click Details to browse to it.
-          context: Preview
+          context: Preview ${{ steps.app_name.outputs.full_name }}
           owner: dignio
           repo: ${{ inputs.app_name }}
           state: success
