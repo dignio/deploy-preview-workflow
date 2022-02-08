@@ -18,6 +18,10 @@ on:
         type: number
 
       # Optional inputs goes here
+      app_name_postfix:
+        description: Postfix the app name if this workflow is being used for different things. I.e. two different docker builds.
+        required: false
+        type: string
       docker_build_args:
         description: By using this you can add multi line build args to docker
         required: false
@@ -108,10 +112,10 @@ jobs:
       - name: Deploy the service to Kubernetes
         uses: dignio/deploy-service@v2
         with:
-          app_name: ${{ inputs.app_name }}-${{ steps.letter_case.outputs.kebab }}-preview
+          app_name: ${{ inputs.app_name }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview
           service_type: ${{ inputs.service_type }}
           namespace: ${{ env.NAMESPACE }}
-          docker_image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.app_name }}:${{ env.INSTANCE }}-${{ steps.letter_case.outputs.kebab }}-preview-${{ steps.short_id.outputs.sha }}
+          docker_image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.app_name }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview-${{ steps.short_id.outputs.sha }}
           aws_region: ${{ env.REGION }}
           replicas: 1
           port: ${{ inputs.port }}
@@ -135,14 +139,14 @@ jobs:
       - name: Add the service to the preview ingress
         shell: bash
         run: |
-          EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ inputs.app_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev") | index(true)')
+          EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ inputs.app_name }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev") | index(true)')
 
           # If the preview ingress does not have the host name, add it.
           if [ "$EXIST" == "null" ] 
           then 
             echo "Creating a preview URL."
 
-            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress --namespace=${{ env.NAMESPACE }} --type='json' -p='[ { "op":"add","path":"/spec/rules/-", "value": { "host": "${{ inputs.app_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev", "http": { "paths": [ { "backend": { "service": { "name": "${{ inputs.app_name }}-${{ steps.letter_case.outputs.kebab }}-preview", "port": { "number": ${{ inputs.port }} } } }, "path": "${{ inputs.path }}", "pathType": "Prefix" } ] } } } ]'
+            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress --namespace=${{ env.NAMESPACE }} --type='json' -p='[ { "op":"add","path":"/spec/rules/-", "value": { "host": "${{ inputs.app_name }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev", "http": { "paths": [ { "backend": { "service": { "name": "${{ inputs.app_name }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview", "port": { "number": ${{ inputs.port }} } } }, "path": "${{ inputs.path }}", "pathType": "Prefix" } ] } } } ]'
           else 
             echo "Preview URL already exists. Skipping." 
           fi
@@ -152,7 +156,7 @@ jobs:
         run: |
             # Run curl 20 times with a retry delay of 15 seconds. 
             # For success it will exit with the code 0, and for failure with the code 6.
-            curl --retry 20 --retry-delay 15 --no-buffer --silent --output /dev/null "https://${{ inputs.app_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev${{ inputs.path }}"
+            curl --retry 20 --retry-delay 15 --no-buffer --silent --output /dev/null "https://${{ inputs.app_name }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev${{ inputs.path }}"
 
       # === Create a GitHub IAT token for the Dignio app.
       # This is kind of stupid because the only reason we're doing
@@ -170,7 +174,7 @@ jobs:
         uses: octokit/request-action@v2.x
         id: create_commit_status
         with:
-          name: "${{ inputs.app_name }} deploy preview"
+          name: "${{ inputs.app_name }}-${{ inputs.app_name_postfix}} deploy preview"
           description: Deploy Preview ready! Click Details to browse to it.
           context: Preview
           owner: dignio
@@ -178,7 +182,7 @@ jobs:
           state: success
           accept: application/vnd.github.v3+json
           route: POST /repos/{owner}/{repo}/statuses/{sha}
-          target_url: https://${{ inputs.app_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev
+          target_url: https://${{ inputs.app_name }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev
           sha: ${{ github.event.pull_request.head.sha }}
         env:
           GITHUB_TOKEN: ${{ steps.create-iat.outputs.token }}
@@ -218,7 +222,7 @@ jobs:
       # === This will delete all resources connected to the preview deployment
       - name: Delete the deployment and service
         shell: bash
-        run: ${{ steps.kubectl.outputs.kubectl-path }} delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ inputs.app_name }}-${{ steps.letter_case.outputs.kebab }}-preview --namespace=${{ env.NAMESPACE }}
+        run: ${{ steps.kubectl.outputs.kubectl-path }} delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ inputs.app_name }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview --namespace=${{ env.NAMESPACE }}
 
       # === This will run a kubectl request to 
       # 1. fetch the index of the preview host
@@ -226,7 +230,7 @@ jobs:
       - name: Remove the host from the preview ingress
         shell: bash
         run: |
-          INDEX=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ inputs.app_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev") | index(true)')
+          INDEX=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ inputs.app_name }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev") | index(true)')
 
           if [ "$INDEX" != "null" ] 
           then 
