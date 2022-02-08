@@ -102,12 +102,12 @@ jobs:
         with:
           file: ${{ inputs.dockerfile }}
           push: true
-          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.letter_case.outputs.kebab }}-preview-latest
+          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview-latest
           cache-to: type=inline
           build-args: ${{ inputs.docker_build_args }}
           tags: |
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ steps.letter_case.outputs.kebab }}-preview-latest
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ steps.letter_case.outputs.kebab }}-preview-${{ steps.short_id.outputs.sha }}
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview-latest
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview-${{ steps.short_id.outputs.sha }}
 
       - name: Deploy the service to Kubernetes
         uses: dignio/deploy-service@v2
