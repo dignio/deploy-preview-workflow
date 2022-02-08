@@ -21,6 +21,7 @@ jobs:
       app_name: prevent-ui
       service_type: webservice
       port: 80
+      dockerfile: Dockerfile
       docker_build_args: |
         "API_BASE_PATH=https://dev.dignio.com/api"
       path: /
