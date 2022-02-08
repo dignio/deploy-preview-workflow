@@ -22,6 +22,11 @@ on:
         description: By using this you can add multi line build args to docker
         required: false
         type: string
+      dockerfile:
+        description: The path to your dockerfile. Defaults to Dockerfile.
+        required: false
+        type: string
+        default: Dockerfile
       path:
         description: This is the index route to the application.
         required: false
@@ -91,6 +96,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ inputs.app_name }}
         with:
+          file: ${{ inputs.dockerfile }}
           push: true
           cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.letter_case.outputs.kebab }}-preview-latest
           cache-to: type=inline
