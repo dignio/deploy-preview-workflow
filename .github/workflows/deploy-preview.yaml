@@ -36,7 +36,7 @@ on:
         required: false
         type: string
         default: /
-  
+
     # Secrets
     secrets:
       aws_access_key_id:
@@ -69,6 +69,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # ===  Check out utilities folder from dignio/workflows
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          repository: dignio/workflows
+          ref: "PLAT-451/dual-workflow-preview"
+          path: ".dignio-workflows"
+
       # ===  Get the latest git short sha
       - name: Get the git short id
         id: short_id
@@ -79,13 +87,7 @@ jobs:
       # === Create the full app name for docker images and manifests
       - name: Create full app name
         id: app_name
-        run: |
-          full_app_name="${{ inputs.app_name }}"
-
-          # Prepend the postfix if it exists
-          [[ ! -z "${{ inputs.app_name_postfix}}" ]] && full_app_name+="-${{ inputs.app_name_postfix}}"
-
-          echo "::set-output name=full_name::$full_app_name"
+        run: bash .dignio-workflows/utilities/create-full-app-name.sh ${{ inputs.app_name }} ${{ inputs.app_name_postfix}}
 
       # === github.head_ref has to be used to get the branch name while in PR state
       - name: Branch name to URL friendly string
@@ -144,7 +146,7 @@ jobs:
           version: "latest"
         id: kubectl
 
-      # === This will run a kubectl request to 
+      # === This will run a kubectl request to
       # 1. fetch the index of the preview host to check the existence
       # 2. if the host do not exist, patch the ingress with the new host
       - name: Add the service to the preview ingress
@@ -153,19 +155,19 @@ jobs:
           EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev") | index(true)')
 
           # If the preview ingress does not have the host name, add it.
-          if [ "$EXIST" == "null" ] 
-          then 
+          if [ "$EXIST" == "null" ]
+          then
             echo "Creating a preview URL."
 
             ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress --namespace=${{ env.NAMESPACE }} --type='json' -p='[ { "op":"add","path":"/spec/rules/-", "value": { "host": "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev", "http": { "paths": [ { "backend": { "service": { "name": "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}-preview", "port": { "number": ${{ inputs.port }} } } }, "path": "${{ inputs.path }}", "pathType": "Prefix" } ] } } } ]'
-          else 
-            echo "Preview URL already exists. Skipping." 
+          else
+            echo "Preview URL already exists. Skipping."
           fi
 
       - name: Check if the preview URL is ready
         shell: bash
         run: |
-            # Run curl 20 times with a retry delay of 15 seconds. 
+            # Run curl 20 times with a retry delay of 15 seconds.
             # For success it will exit with the code 0, and for failure with the code 6.
             curl --retry 20 --retry-delay 15 --no-buffer --silent --output /dev/null "https://${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev${{ inputs.path }}"
 
@@ -246,7 +248,7 @@ jobs:
         shell: bash
         run: ${{ steps.kubectl.outputs.kubectl-path }} delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}-preview --namespace=${{ env.NAMESPACE }}
 
-      # === This will run a kubectl request to 
+      # === This will run a kubectl request to
       # 1. fetch the index of the preview host
       # 2. patch the ingress with what host to remove based on the index
       - name: Remove the host from the preview ingress
@@ -254,8 +256,8 @@ jobs:
         run: |
           INDEX=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev") | index(true)')
 
-          if [ "$INDEX" != "null" ] 
-          then 
+          if [ "$INDEX" != "null" ]
+          then
             echo "Deleting host from preview ingress."
 
             ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress --namespace=${{ env.NAMESPACE }} --type='json' -p='[ { "op":"remove","path":"/spec/rules/'"$INDEX"'" } ]'
