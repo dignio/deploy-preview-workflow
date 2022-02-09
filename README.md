@@ -19,8 +19,10 @@ jobs:
     uses: dignio/workflows/.github/workflows/deploy-preview.yaml@main
     with:
       app_name: prevent-ui
+      app_name_postfix: storybook
       service_type: webservice
       port: 80
+      dockerfile: Dockerfile
       docker_build_args: |
         "API_BASE_PATH=https://dev.dignio.com/api"
       path: /
