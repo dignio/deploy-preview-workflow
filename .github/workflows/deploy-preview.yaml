@@ -69,8 +69,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # ===  Check out utilities folder from dignio/workflows
-      - name: Checkout repository
+      # ===  Check out dignio workflow repo for the utilities folder
+      - name: Checkout dignio/workflow repository
         uses: actions/checkout@v2
         with:
           repository: dignio/workflows
@@ -206,6 +206,14 @@ jobs:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
+      # ===  Check out dignio workflow repo for the utilities folder
+      - name: Checkout dignio/workflow repository
+        uses: actions/checkout@v2
+        with:
+          repository: dignio/workflows
+          ref: "PLAT-451/dual-workflow-preview"
+          path: ".dignio-workflows"
+
       # === github.head_ref has to be used to get the branch name while in PR state
       - name: Branch name to URL friendly string
         uses: dignio/letter-case-action@v1
@@ -216,13 +224,7 @@ jobs:
       # === Create the full app name for docker images and manifests
       - name: Create full app name
         id: app_name
-        run: |
-          full_app_name="${{ inputs.app_name }}"
-
-          # Prepend the postfix if it exists
-          [[ ! -z "${{ inputs.app_name_postfix}}" ]] && full_app_name+="-${{ inputs.app_name_postfix}}"
-
-          echo "::set-output name=full_name::$full_app_name"
+        run: bash .dignio-workflows/utilities/create-full-app-name.sh ${{ inputs.app_name }} ${{ inputs.app_name_postfix}}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
