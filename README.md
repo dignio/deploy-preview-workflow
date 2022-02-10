@@ -33,6 +33,8 @@ jobs:
       github_app_private_key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 ```
 
+### Deploy preview demo
 
+The `Dockerfile` and `index.html` is used in our local `.github/workflows/test-deploy-preview.yaml` to test the deploy preview on PRs.
 ## LICENSE
 See [LICENSE](LICENSE)
