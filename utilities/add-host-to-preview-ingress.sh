@@ -1,5 +1,12 @@
+kubectl="$1"
+namespace="$2"
+full_name="$3"
+branch_name_kebab_case="$4"
+app_port=$5
+app_path="$6"
+
 # Check if the ingress host exists
-EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json | jq '.spec.rules | map(.host == "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev") | index(true)')
+EXIST=$($kubectl get ingress preview-ingress --namespace=$namespace --output=json | jq '.spec.rules | map(.host == "$full_name-$branch_name_kebab_case.preview.dignio.dev") | index(true)')
 
 # If the preview ingress does not have the host name, add it.
 if [ "$EXIST" == "null" ]
@@ -22,18 +29,18 @@ then
     #             port:
     #               number: 80
 
-    # Transform this EOF to a single line by using tr. Else the kubectl patch will think it is multiline and fail.
-    patch=$(cat <<EOF | tr -d '\n'
+ # Transform this EOF to a single line by using tr. Else the kubectl patch will think it is multiline and fail.
+patch=$(cat <<EOF | tr -d '\n'
 [{
     "op": "add",
     "path": "/spec/rules/-",
     "value": {
-        "host": "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev",
+        "host": "$full_name-$branch_name_kebab_case.preview.dignio.dev",
         "http": {
             "paths": [{
                 "backend": {
                     "service": {
-                        "name": "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}-preview",
+                        "name": "$full_name-$branch_name_kebab_case-preview",
                         "port": {
                             "number": $app_port
                         }
@@ -45,9 +52,10 @@ then
         }
     }
 }]
-EOF )
+EOF
+)
 
-    ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress --namespace=${{ env.NAMESPACE }} --type='json' -p="$patch"
+    $kubectl patch ingress preview-ingress --namespace=$namespace --type='json' -p="$patch"
 else
     echo "Preview URL already exists. Skipping."
 fi

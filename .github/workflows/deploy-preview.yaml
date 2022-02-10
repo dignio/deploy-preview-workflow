@@ -149,10 +149,10 @@ jobs:
       # 1. fetch the index of the preview host to check the existence
       # 2. if the host do not exist, patch the ingress with the new host
       - name: Add the service to the preview ingress
-        run: bash .dignio-workflows/utilities/add-host-to-preview-ingress.sh
+        run: bash .dignio-workflows/utilities/add-host-to-preview-ingress.sh ${{ steps.kubectl.outputs.kubectl-path }} ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }} ${{ steps.letter_case.outputs.kebab }} ${{ inputs.port }} ${{ inputs.path }}
 
       - name: Check if the preview URL is ready
-        run: bash .dignio-workflows/utilities/is-preview-host-ready.sh
+        run: bash .dignio-workflows/utilities/is-preview-host-ready.sh ${{ steps.app_name.outputs.full_name }} ${{ steps.letter_case.outputs.kebab }} {{ inputs.path }}
 
       # === Create a GitHub IAT token for the Dignio app.
       # This is kind of stupid because the only reason we're doing
@@ -236,4 +236,4 @@ jobs:
       # 1. fetch the index of the preview host
       # 2. patch the ingress with what host to remove based on the index
       - name: Remove the host from the preview ingress
-        run: bash .dignio-workflows/utilities/remove-host-from-preview-ingress.sh
+        run: bash .dignio-workflows/utilities/remove-host-from-preview-ingress.sh ${{ steps.kubectl.outputs.kubectl-path }} ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }} ${{ steps.letter_case.outputs.kebab }}

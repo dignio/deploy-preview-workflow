@@ -12,7 +12,7 @@ jobs:
   deploy-preview:
     uses: dignio/workflows/.github/workflows/deploy-preview.yaml@chore/move-bash-scripts-to-files
     with:
-      app_name: prevent-ui
+      app_name: workflows
       service_type: webservice
       port: 80
 
