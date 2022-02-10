@@ -1,0 +1,23 @@
+name: Preview the application
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+# This will cancel the previous running jobs if a new commit is added to the PR
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    uses: dignio/workflows/.github/workflows/deploy-preview.yaml@chore/move-bash-scripts-to-files
+    with:
+      app_name: prevent-ui
+      service_type: webservice
+      port: 80
+
+    secrets:
+      aws_access_key_id: ${{ secrets.DEVELOPMENT_GHK8S_AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.DEVELOPMENT_GHK8S_AWS_SECRET_KEY_ID }}
+      kube_config: ${{ secrets.KUBE_CONFIG_DEV }}
+      github_app_private_key: ${{ secrets.DIGNIO_GH_APP_PRIVATE_KEY }}
