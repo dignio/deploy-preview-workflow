@@ -35,11 +35,11 @@ then
                     "service": {
                         "name": "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}-preview",
                         "port": {
-                            "number": ${{ inputs.port }}
+                            "number": $app_port
                         }
                     }
                 },
-                "path": "${{ inputs.path }}",
+                "path": "$app_path",
                 "pathType": "Prefix"
             }]
         }
