@@ -96,7 +96,7 @@ jobs:
         id: app_name
         shell: bash
         run: |
-          ${{ env.UTILITIES }}/create-full-app-name.sh ${{ inputs.app_name }} ${{ inputs.app_name_postfix }} ${{ steps.letter_case.outputs.kebab }}
+          ${{ env.UTILITIES }}/create-full-app-name.sh "${{ inputs.app_name }}" "${{ inputs.app_name_postfix }}" "${{ steps.letter_case.outputs.kebab }}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -215,7 +215,7 @@ jobs:
         id: app_name
         shell: bash
         run: |
-          ${{ env.UTILITIES }}/create-full-app-name.sh ${{ inputs.app_name }} ${{ inputs.app_name_postfix }} ${{ steps.letter_case.outputs.kebab }}
+          ${{ env.UTILITIES }}/create-full-app-name.sh "${{ inputs.app_name }}" "${{ inputs.app_name_postfix }}" "${{ steps.letter_case.outputs.kebab }}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
