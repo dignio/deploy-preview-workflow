@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -exo pipefail
 
 app_name="${{ inputs.app_name }}"
