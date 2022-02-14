@@ -13,4 +13,7 @@ then
     full_app_name+="-app_name_postfix"
 fi
 
+# Set a limit to 63 characters as k8s has the final say in this
+full_app_name+=$(echo $full_app_name | cut -c -63)
+
 echo "::set-output name=full_name::$full_app_name"
