@@ -181,7 +181,7 @@ jobs:
           description: Deploy Preview ready! Click Details to browse to it.
           context: "Preview - ${{ steps.app_name.outputs.full_name }}"
           owner: dignio
-          repo: ${{ inputs.app_name }}
+          repo: ${{ github.event.repository.name }}
           state: success
           accept: application/vnd.github.v3+json
           route: POST /repos/{owner}/{repo}/statuses/{sha}
