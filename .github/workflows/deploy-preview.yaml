@@ -141,18 +141,12 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
           KUBE_CONFIG: ${{ secrets.kube_config }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v2.0
-        with:
-          version: "latest"
-        id: kubectl
-
       # === This will run a kubectl request to
       # 1. fetch the index of the preview host to check the existence
       # 2. if the host do not exist, patch the ingress with the new host
       - name: Add the service to the preview ingress
         shell: bash
-        run: bash ${{ env.UTILITIES }}/add-host-to-preview-ingress.sh ${{ steps.kubectl.outputs.kubectl-path }} ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }} ${{ inputs.port }} ${{ inputs.path }}
+        run: bash ${{ env.UTILITIES }}/add-host-to-preview-ingress.sh ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }} ${{ inputs.port }} ${{ inputs.path }}
 
       - name: Check if the preview URL is ready
         shell: bash
@@ -226,20 +220,14 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.kube_config }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v2.0
-        with:
-          version: "latest"
-        id: kubectl
-
       # === This will delete all resources connected to the preview deployment
       - name: Delete the deployment and service
         shell: bash
-        run: ${{ steps.kubectl.outputs.kubectl-path }} delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ steps.app_name.outputs.full_name }} --namespace=${{ env.NAMESPACE }}
+        run: kubectl delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ steps.app_name.outputs.full_name }} --namespace=${{ env.NAMESPACE }}
 
       # === This will run a kubectl request to
       # 1. fetch the index of the preview host
       # 2. patch the ingress with what host to remove based on the index
       - name: Remove the host from the preview ingress
         shell: bash
-        run: bash ${{ env.UTILITIES }}/remove-host-from-preview-ingress.sh ${{ steps.kubectl.outputs.kubectl-path }} ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }}
+        run: bash ${{ env.UTILITIES }}/remove-host-from-preview-ingress.sh ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }}
