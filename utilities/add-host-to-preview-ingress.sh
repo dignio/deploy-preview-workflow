@@ -5,12 +5,11 @@ set -exo pipefail
 kubectl="$1"
 namespace="$2"
 full_name="$3"
-branch_name_kebab_case="$4"
-app_port=$5
-app_path="$6"
+app_port=$4
+app_path="$5"
 
 # Check if the ingress host exists
-EXIST=$($kubectl get ingress preview-ingress --namespace=$namespace --output=json | jq '.spec.rules | map(.host == "$full_name-$branch_name_kebab_case.preview.dignio.dev") | index(true)')
+EXIST=$($kubectl get ingress preview-ingress --namespace=$namespace --output=json | jq '.spec.rules | map(.host == "$full_name.preview.dignio.dev") | index(true)')
 
 # If the preview ingress does not have the host name, add it.
 if [ "$EXIST" == "null" ]
@@ -39,12 +38,12 @@ patch=$(cat <<EOF | tr -d '\n'
     "op": "add",
     "path": "/spec/rules/-",
     "value": {
-        "host": "$full_name-$branch_name_kebab_case.preview.dignio.dev",
+        "host": "$full_name.preview.dignio.dev",
         "http": {
             "paths": [{
                 "backend": {
                     "service": {
-                        "name": "$full_name-$branch_name_kebab_case-preview",
+                        "name": "$full_name-preview",
                         "port": {
                             "number": $app_port
                         }
