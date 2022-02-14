@@ -1,3 +1,5 @@
+set -euxo pipefail
+
 kubectl="$1"
 namespace="$2"
 full_name="$3"

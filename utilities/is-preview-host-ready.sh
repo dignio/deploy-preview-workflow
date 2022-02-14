@@ -1,3 +1,5 @@
+set -euxo pipefail
+
 full_name="$1"
 branch_name_kebab_case="$2"
 input_path="$3"
