@@ -1,7 +1,7 @@
 set -exo pipefail
 
-app_name="$1"
-app_name_postfix="$2"
+app_name="${{ inputs.app_name }}"
+app_name_postfix="${{ inputs.app_name_postfix}}"
 
 full_app_name="$app_name"
 

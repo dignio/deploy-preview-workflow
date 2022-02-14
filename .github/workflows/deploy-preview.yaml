@@ -87,7 +87,9 @@ jobs:
       # === Create the full app name for docker images and manifests
       - name: Create full app name
         id: app_name
-        run: bash ${{ env.UTILITIES }}/create-full-app-name.sh ${{ inputs.app_name }} ${{ inputs.app_name_postfix}}
+        shell: bash
+        run: |
+          ${{ env.UTILITIES }}/create-full-app-name.sh
 
       # === github.head_ref has to be used to get the branch name while in PR state
       - name: Branch name to URL friendly string
