@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   deploy-preview:
-    uses: dignio/workflows/.github/workflows/deploy-preview.yaml@chore/move-bash-scripts-to-files
+    uses: dignio/workflows/.github/workflows/deploy-preview.yaml@refactor/full-deploy-preview-refactor
     with:
       app_name: workflows
       service_type: webservice
