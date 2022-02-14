@@ -94,7 +94,6 @@ jobs:
       # === Create the full app name for docker images and manifests
       - name: Create full app name
         id: app_name
-        shell: bash
         run: bash ${{ env.UTILITIES }}/create-full-app-name.sh "${{ inputs.app_name }}" "${{ inputs.app_name_postfix }}" "${{ steps.letter_case.outputs.kebab }}"
 
       - name: Configure AWS credentials
@@ -145,11 +144,9 @@ jobs:
       # 1. fetch the index of the preview host to check the existence
       # 2. if the host do not exist, patch the ingress with the new host
       - name: Add the service to the preview ingress
-        shell: bash
         run: bash ${{ env.UTILITIES }}/add-host-to-preview-ingress.sh ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }} ${{ inputs.port }} ${{ inputs.path }}
 
       - name: Check if the preview URL is ready
-        shell: bash
         run: bash ${{ env.UTILITIES }}/is-preview-host-ready.sh ${{ steps.app_name.outputs.full_name }} ${{ inputs.path }}
 
       # === Create a GitHub IAT token for the Dignio app.
@@ -204,7 +201,6 @@ jobs:
       # === Create the full app name for docker images and manifests
       - name: Create full app name
         id: app_name
-        shell: bash
         run: bash ${{ env.UTILITIES }}/create-full-app-name.sh "${{ inputs.app_name }}" "${{ inputs.app_name_postfix }}" "${{ steps.letter_case.outputs.kebab }}"
 
       - name: Configure AWS credentials
@@ -222,12 +218,10 @@ jobs:
 
       # === This will delete all resources connected to the preview deployment
       - name: Delete the deployment and service
-        shell: bash
         run: kubectl delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ steps.app_name.outputs.full_name }} --namespace=${{ env.NAMESPACE }}
 
       # === This will run a kubectl request to
       # 1. fetch the index of the preview host
       # 2. patch the ingress with what host to remove based on the index
       - name: Remove the host from the preview ingress
-        shell: bash
         run: bash ${{ env.UTILITIES }}/remove-host-from-preview-ingress.sh ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }}
