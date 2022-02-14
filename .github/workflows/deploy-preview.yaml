@@ -77,6 +77,13 @@ jobs:
           repository: dignio/workflows
           path: ".dignio-workflows"
 
+      # === github.head_ref has to be used to get the branch name while in PR state
+      - name: Branch name to URL friendly string
+        uses: dignio/letter-case-action@v1
+        id: letter_case
+        with:
+          string: ${{ github.head_ref }}
+
       # ===  Get the latest git short sha
       - name: Get the git short id
         id: short_id
@@ -90,13 +97,6 @@ jobs:
         shell: bash
         run: |
           ${{ env.UTILITIES }}/create-full-app-name.sh ${{ inputs.app_name }} ${{ inputs.app_name_postfix }} ${{ steps.letter_case.outputs.kebab }}
-
-      # === github.head_ref has to be used to get the branch name while in PR state
-      - name: Branch name to URL friendly string
-        uses: dignio/letter-case-action@v1
-        id: letter_case
-        with:
-          string: ${{ github.head_ref }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
