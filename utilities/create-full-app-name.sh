@@ -16,7 +16,7 @@ fi
 
 full_app_name+="-$kebab_branch_name"
 
-# Set a limit to 63 characters as k8s has the final say in this
+# Set a limit to 63 characters as k8s has the final say in this.
 # Remove - if that is the last character
 full_app_name="$(echo $full_app_name | cut -c -63 | sed 's/-$//')"
 

@@ -44,7 +44,7 @@ patch=$(cat <<EOF | tr -d '\n'
             "paths": [{
                 "backend": {
                     "service": {
-                        "name": "$full_name-preview",
+                        "name": "$full_name",
                         "port": {
                             "number": $app_port
                         }
