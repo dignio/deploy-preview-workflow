@@ -9,7 +9,8 @@ app_port=$4
 app_path="$5"
 
 # Check if the ingress host exists
-EXIST=$($kubectl get ingress preview-ingress --namespace=$namespace --output=json | jq '.spec.rules | map(.host == "$full_name.preview.dignio.dev") | index(true)')
+EXIST=$($kubectl get ingress preview-ingress --namespace=$namespace --output=json | jq '.spec.rules | map(.host == "'"$full_name"'.preview.dignio.dev") | index(true)')
+
 
 # If the preview ingress does not have the host name, add it.
 if [ "$EXIST" == "null" ]

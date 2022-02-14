@@ -7,7 +7,7 @@ namespace="$2"
 full_name="$3"
 
 # Get the index of the host we want to remove from the ingress
-INDEX=$($kubectl get ingress preview-ingress --namespace=$namespace --output=json  | jq '.spec.rules | map(.host == "$full_name.preview.dignio.dev") | index(true)')
+INDEX=$($kubectl get ingress preview-ingress --namespace=$namespace --output=json  | jq '.spec.rules | map(.host == "'"$full_name"'.preview.dignio.dev") | index(true)')
 
 if [ "$INDEX" != "null" ]
 then
