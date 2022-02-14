@@ -1,4 +1,4 @@
-set -euxo pipefail
+set -exo pipefail
 
 kubectl="$1"
 namespace="$2"

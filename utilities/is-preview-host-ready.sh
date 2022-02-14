@@ -1,4 +1,4 @@
-set -euxo pipefail
+set -exo pipefail
 
 full_name="$1"
 branch_name_kebab_case="$2"
