@@ -75,7 +75,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: dignio/workflows
-          ref: refactor/full-deploy-preview-refactor
           path: ".dignio-workflows"
 
       # === github.head_ref has to be used to get the branch name while in PR state
