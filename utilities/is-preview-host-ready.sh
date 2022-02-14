@@ -1,3 +1,5 @@
+#!/bin/bash
+
 set -exo pipefail
 
 full_name="$1"
