@@ -57,6 +57,7 @@ env:
   REGION: eu-north-1
   NAMESPACE: preview
   INSTANCE: dev
+  UTILITIES: .dignio-workflows/utilities
 
 jobs:
   build_push_deploy:
@@ -76,6 +77,13 @@ jobs:
           repository: dignio/workflows
           path: ".dignio-workflows"
 
+      # === github.head_ref has to be used to get the branch name while in PR state
+      - name: Branch name to URL friendly string
+        uses: dignio/letter-case-action@v1
+        id: letter_case
+        with:
+          string: ${{ github.head_ref }}
+
       # ===  Get the latest git short sha
       - name: Get the git short id
         id: short_id
@@ -86,14 +94,7 @@ jobs:
       # === Create the full app name for docker images and manifests
       - name: Create full app name
         id: app_name
-        run: bash .dignio-workflows/utilities/create-full-app-name.sh ${{ inputs.app_name }} ${{ inputs.app_name_postfix}}
-
-      # === github.head_ref has to be used to get the branch name while in PR state
-      - name: Branch name to URL friendly string
-        uses: dignio/letter-case-action@v1
-        id: letter_case
-        with:
-          string: ${{ github.head_ref }}
+        run: bash ${{ env.UTILITIES }}/create-full-app-name.sh "${{ inputs.app_name }}" "${{ inputs.app_name_postfix }}" "${{ steps.letter_case.outputs.kebab }}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -114,20 +115,20 @@ jobs:
         with:
           file: ${{ inputs.dockerfile }}
           push: true
-          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview-latest
+          cache-from: type=registry,ref=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix }}-${{ steps.letter_case.outputs.kebab }}-latest
           cache-to: type=inline
           build-args: ${{ inputs.docker_build_args }}
           tags: |
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview-latest
-            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview-${{ steps.short_id.outputs.sha }}
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix }}-${{ steps.letter_case.outputs.kebab }}-latest
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix }}-${{ steps.letter_case.outputs.kebab }}-${{ steps.short_id.outputs.sha }}
 
       - name: Deploy the service to Kubernetes
         uses: dignio/deploy-service@v2
         with:
-          app_name: ${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}-preview
+          app_name: ${{ steps.app_name.outputs.full_name }}
           service_type: ${{ inputs.service_type }}
           namespace: ${{ env.NAMESPACE }}
-          docker_image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.app_name }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix}}-${{ steps.letter_case.outputs.kebab }}-preview-${{ steps.short_id.outputs.sha }}
+          docker_image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.app_name }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix }}-${{ steps.letter_case.outputs.kebab }}-${{ steps.short_id.outputs.sha }}
           aws_region: ${{ env.REGION }}
           replicas: 1
           port: ${{ inputs.port }}
@@ -139,36 +140,14 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
           KUBE_CONFIG: ${{ secrets.kube_config }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v2.0
-        with:
-          version: "latest"
-        id: kubectl
-
       # === This will run a kubectl request to
       # 1. fetch the index of the preview host to check the existence
       # 2. if the host do not exist, patch the ingress with the new host
       - name: Add the service to the preview ingress
-        shell: bash
-        run: |
-          EXIST=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev") | index(true)')
-
-          # If the preview ingress does not have the host name, add it.
-          if [ "$EXIST" == "null" ]
-          then
-            echo "Creating a preview URL."
-
-            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress --namespace=${{ env.NAMESPACE }} --type='json' -p='[ { "op":"add","path":"/spec/rules/-", "value": { "host": "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev", "http": { "paths": [ { "backend": { "service": { "name": "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}-preview", "port": { "number": ${{ inputs.port }} } } }, "path": "${{ inputs.path }}", "pathType": "Prefix" } ] } } } ]'
-          else
-            echo "Preview URL already exists. Skipping."
-          fi
+        run: bash ${{ env.UTILITIES }}/add-host-to-preview-ingress.sh ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }} ${{ inputs.port }} ${{ inputs.path }}
 
       - name: Check if the preview URL is ready
-        shell: bash
-        run: |
-            # Run curl 20 times with a retry delay of 15 seconds.
-            # For success it will exit with the code 0, and for failure with the code 6.
-            curl --retry 20 --retry-delay 15 --no-buffer --silent --output /dev/null "https://${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev${{ inputs.path }}"
+        run: bash ${{ env.UTILITIES }}/is-preview-host-ready.sh ${{ steps.app_name.outputs.full_name }} ${{ inputs.path }}
 
       # === Create a GitHub IAT token for the Dignio app.
       # This is kind of stupid because the only reason we're doing
@@ -190,11 +169,11 @@ jobs:
           description: Deploy Preview ready! Click Details to browse to it.
           context: "Preview - ${{ steps.app_name.outputs.full_name }}"
           owner: dignio
-          repo: ${{ inputs.app_name }}
+          repo: ${{ github.event.repository.name }}
           state: success
           accept: application/vnd.github.v3+json
           route: POST /repos/{owner}/{repo}/statuses/{sha}
-          target_url: https://${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev
+          target_url: https://${{ steps.app_name.outputs.full_name }}.preview.dignio.dev
           sha: ${{ github.event.pull_request.head.sha }}
         env:
           GITHUB_TOKEN: ${{ steps.create-iat.outputs.token }}
@@ -222,7 +201,7 @@ jobs:
       # === Create the full app name for docker images and manifests
       - name: Create full app name
         id: app_name
-        run: bash .dignio-workflows/utilities/create-full-app-name.sh ${{ inputs.app_name }} ${{ inputs.app_name_postfix}}
+        run: bash ${{ env.UTILITIES }}/create-full-app-name.sh "${{ inputs.app_name }}" "${{ inputs.app_name_postfix }}" "${{ steps.letter_case.outputs.kebab }}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -237,28 +216,12 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.kube_config }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v2.0
-        with:
-          version: "latest"
-        id: kubectl
-
       # === This will delete all resources connected to the preview deployment
       - name: Delete the deployment and service
-        shell: bash
-        run: ${{ steps.kubectl.outputs.kubectl-path }} delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}-preview --namespace=${{ env.NAMESPACE }}
+        run: kubectl delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ steps.app_name.outputs.full_name }} --namespace=${{ env.NAMESPACE }}
 
       # === This will run a kubectl request to
       # 1. fetch the index of the preview host
       # 2. patch the ingress with what host to remove based on the index
       - name: Remove the host from the preview ingress
-        shell: bash
-        run: |
-          INDEX=$(${{ steps.kubectl.outputs.kubectl-path }} get ingress preview-ingress --namespace=${{ env.NAMESPACE }} --output=json  | jq '.spec.rules | map(.host == "${{ steps.app_name.outputs.full_name }}-${{ steps.letter_case.outputs.kebab }}.preview.dignio.dev") | index(true)')
-
-          if [ "$INDEX" != "null" ]
-          then
-            echo "Deleting host from preview ingress."
-
-            ${{ steps.kubectl.outputs.kubectl-path }} patch ingress preview-ingress --namespace=${{ env.NAMESPACE }} --type='json' -p='[ { "op":"remove","path":"/spec/rules/'"$INDEX"'" } ]'
-          fi
+        run: bash ${{ env.UTILITIES }}/remove-host-from-preview-ingress.sh ${{ env.NAMESPACE }} ${{ steps.app_name.outputs.full_name }}

@@ -1,0 +1,23 @@
+name: Preview the application
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+# This will cancel the previous running jobs if a new commit is added to the PR
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    uses: ./.github/workflows/deploy-preview.yaml
+    with:
+      app_name: workflows
+      service_type: webservice
+      port: 80
+
+    secrets:
+      aws_access_key_id: ${{ secrets.DEVELOPMENT_GHK8S_AWS_ACCESS_KEY_ID }}
+      aws_secret_access_key: ${{ secrets.DEVELOPMENT_GHK8S_AWS_SECRET_KEY_ID }}
+      kube_config: ${{ secrets.KUBE_CONFIG_DEV }}
+      github_app_private_key: ${{ secrets.DIGNIO_GH_APP_PRIVATE_KEY }}
