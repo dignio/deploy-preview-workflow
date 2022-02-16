@@ -88,7 +88,7 @@ jobs:
       - name: Get the git short id
         id: short_id
         run: |
-          sha=$(cut -c 1-7 <<< $GITHUB_SHA)
+          sha=$(cut -c 1-7 <<< ${{ github.event.pull_request.head.sha }})
           echo "::set-output name=sha::$sha"
 
       # === Create the full app name for docker images and manifests
