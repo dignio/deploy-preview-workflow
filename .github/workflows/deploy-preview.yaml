@@ -53,7 +53,9 @@ on:
         required: true
 
     outputs:
-      preview_url: ${{ jobs.build_push_deploy.outputs.preview_url }}
+      preview_url:
+        description: The full preview URL
+        value: ${{ jobs.build_push_deploy.outputs.preview_url }}
 
 # Predefined environment variables used as default values
 env:
