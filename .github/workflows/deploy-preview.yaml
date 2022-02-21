@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      preview_url: "https://${{ steps.app_name.outputs.full_name }}.preview.dignio.com"
+      preview_url: "https://${{ steps.app_name.outputs.full_name }}.preview.dignio.dev"
 
     steps:
       # ===  Check out the current repository
