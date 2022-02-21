@@ -29,4 +29,4 @@ jobs:
     steps:
       - name: Echo preview URL
         shell: bash
-        run: echo ${{ jobs.deploy-preview.outputs.preview_url }}
+        run: echo ${{ needs.deploy-preview.outputs.preview_url }}
