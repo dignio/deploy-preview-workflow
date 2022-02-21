@@ -21,3 +21,12 @@ jobs:
       aws_secret_access_key: ${{ secrets.DEVELOPMENT_GHK8S_AWS_SECRET_KEY_ID }}
       kube_config: ${{ secrets.KUBE_CONFIG_DEV }}
       github_app_private_key: ${{ secrets.DIGNIO_GH_APP_PRIVATE_KEY }}
+
+  check-outputs:
+    name: Check outputs from deploy preview
+    needs: deploy-preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo preview URL
+        shell: bash
+        run: echo ${{ jobs.deploy-preview.outputs.preview_url }}
