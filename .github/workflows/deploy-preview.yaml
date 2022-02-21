@@ -52,6 +52,11 @@ on:
         description: The github app private key to be used for the preview link on PR generation
         required: true
 
+    outputs:
+      preview_url:
+        description: The full preview URL
+        value: ${{ jobs.build_push_deploy.outputs.preview_url }}
+
 # Predefined environment variables used as default values
 env:
   REGION: eu-north-1
@@ -64,6 +69,9 @@ jobs:
     name: Build and push image to ECR
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
+
+    outputs:
+      preview_url: "https://${{ steps.app_name.outputs.full_name }}.preview.dignio.dev"
 
     steps:
       # ===  Check out the current repository
