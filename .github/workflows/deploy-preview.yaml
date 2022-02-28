@@ -18,6 +18,11 @@ on:
         type: number
 
       # Optional inputs goes here
+      github_environment:
+        description: What github environment to target
+        required: false
+        type: string
+        default: development
       app_name_postfix:
         description: Postfix the app name if this workflow is being used for different things. I.e. two different docker builds.
         required: false
@@ -69,6 +74,9 @@ jobs:
     name: Build and push image to ECR
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ inputs.github_environment }}
 
     outputs:
       preview_url: "https://${{ steps.app_name.outputs.full_name }}.preview.dignio.dev"
