@@ -224,6 +224,11 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ secrets.kube_config }}
 
+      - name: Add kubectl
+        uses: azure/setup-kubectl@v2.0
+        with:
+          version: "v1.22.0"
+
       # === This will delete all resources connected to the preview deployment
       - name: Delete the deployment and service
         run: kubectl delete deployments,services,cm,pv,pvc,sc,secrets -l app=${{ steps.app_name.outputs.full_name }} --namespace=${{ env.NAMESPACE }}
