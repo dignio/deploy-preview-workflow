@@ -25,6 +25,7 @@ jobs:
   check-outputs:
     name: Check outputs from deploy preview
     needs: deploy-preview
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - name: Echo preview URL
