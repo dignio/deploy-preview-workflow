@@ -68,6 +68,8 @@ jobs:
   build_push_deploy:
     name: Build and push image to ECR
     if: github.event.action != 'closed'
+    # Prevents a workflow run from failing when a job fails
+    continue-on-error: true
     runs-on: ubuntu-latest
 
     outputs:
@@ -190,6 +192,8 @@ jobs:
   teardown:
     name: Teardown the preview
     if: github.event.action == 'closed'
+    # Prevents a workflow run from failing when a job fails
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       # ===  Check out dignio workflow repo for the utilities folder
