@@ -64,7 +64,7 @@ permissions:
 env:
   REGION: eu-north-1
   NAMESPACE: preview
-  INSTANCE: dev
+  INSTANCE: development
   UTILITIES: .dignio-workflows/utilities
   CLUSTER_NAME: dev-k8s
 
@@ -141,6 +141,8 @@ jobs:
         with:
           app_name: ${{ steps.app_name.outputs.full_name }}
           service_type: ${{ inputs.service_type }}
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          instance: ${{ env.ISNTANCE }}
           namespace: ${{ env.NAMESPACE }}
           docker_image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.app_name }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix }}-${{ steps.app_name.outputs.full_name }}-${{ steps.short_id.outputs.sha }}
           aws_region: ${{ env.REGION }}
@@ -148,7 +150,6 @@ jobs:
           replicas: 1
           port: ${{ inputs.port }}
           container_port: ${{ inputs.port }}
-          ingress: false
 
       # === This will run a kubectl request to
       # 1. fetch the index of the preview host to check the existence
