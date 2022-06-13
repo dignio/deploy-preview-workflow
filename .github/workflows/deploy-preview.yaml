@@ -52,6 +52,14 @@ on:
         description: The full preview URL
         value: ${{ jobs.build_push_deploy.outputs.preview_url }}
 
+
+# Permissions needed to run this workflow and the actions provided
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+permissions:
+  id-token: write
+  actions: write
+  contents: read
+
 # Predefined environment variables used as default values
 env:
   REGION: eu-north-1
