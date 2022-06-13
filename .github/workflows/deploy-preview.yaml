@@ -16,6 +16,10 @@ on:
         description: This is the application port number.
         required: true
         type: number
+      aws_role:
+        description: The role used to grant access to AWS
+        required: true
+        type: string
 
       # Optional inputs goes here
       app_name_postfix:
@@ -39,15 +43,6 @@ on:
 
     # Secrets
     secrets:
-      aws_access_key_id:
-        description: The AWS access key ID
-        required: true
-      aws_secret_access_key:
-        description: The AWS secret access key
-        required: true
-      kube_config:
-        description: The kube config for deployments
-        required: true
       github_app_private_key:
         description: The github app private key to be used for the preview link on PR generation
         required: true
@@ -57,12 +52,21 @@ on:
         description: The full preview URL
         value: ${{ jobs.build_push_deploy.outputs.preview_url }}
 
+
+# Permissions needed to run this workflow and the actions provided
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#permissions
+permissions:
+  id-token: write
+  actions: write
+  contents: read
+
 # Predefined environment variables used as default values
 env:
   REGION: eu-north-1
   NAMESPACE: preview
-  INSTANCE: dev
+  INSTANCE: development
   UTILITIES: .dignio-workflows/utilities
+  CLUSTER_NAME: dev-k8s
 
 jobs:
   build_push_deploy:
@@ -109,8 +113,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.aws_access_key_id }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          role-to-assume: ${{ inputs.aws_role }}
+          role-session-name: GithubActionsSession
           aws-region: ${{ env.REGION }}
 
       - name: Login to Amazon ECR
@@ -133,22 +137,19 @@ jobs:
             ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix }}-${{ steps.app_name.outputs.full_name }}-${{ steps.short_id.outputs.sha }}
 
       - name: Deploy the service to Kubernetes
-        uses: dignio/deploy-service@v2
+        uses: dignio/deploy-service@v3
         with:
           app_name: ${{ steps.app_name.outputs.full_name }}
           service_type: ${{ inputs.service_type }}
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          instance: ${{ env.INSTANCE }}
           namespace: ${{ env.NAMESPACE }}
           docker_image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.app_name }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix }}-${{ steps.app_name.outputs.full_name }}-${{ steps.short_id.outputs.sha }}
           aws_region: ${{ env.REGION }}
+          aws_role: ${{ inputs.aws_role }}
           replicas: 1
           port: ${{ inputs.port }}
           container_port: ${{ inputs.port }}
-          ingress: false
-
-          # Required secrets
-          AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
-          KUBE_CONFIG: ${{ secrets.kube_config }}
 
       # === This will run a kubectl request to
       # 1. fetch the index of the preview host to check the existence
@@ -218,15 +219,34 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.aws_access_key_id }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          role-to-assume: ${{ inputs.aws_role }}
+          role-session-name: GithubActionsSession
           aws-region: ${{ env.REGION }}
+
+      - name: Create the kubeconfig
+        id: kubeconfig
+        shell: bash
+        run: |
+          # fetch the aws account id
+          account_id="$(aws sts get-caller-identity --query Account --output text)"
+
+          # By running this command we are fetching the kube configuration for the github oidc user
+          # The OIDC user session is connected to the KubeGithubDeployment role for access to download the configuration
+          # Note, this is a short lived kubeconfig.
+          aws eks update-kubeconfig --name=${{ env.CLUSTER_NAME }} --region=${{ env.REGION }} --role-arn="arn:aws:iam::$account_id:role/KubeGithubDeployment" --kubeconfig=/tmp/kubeconfig
+
+          kubeconfig="$(cat /tmp/kubeconfig)"
+
+          # A hack to add the multiline configuration as an env variable
+          echo "DYNAMIC_KUBECONFIG<<EOF" >> $GITHUB_ENV
+          echo "$kubeconfig" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       - name: Authenticate with Kubernetes
         uses: azure/k8s-set-context@v1
         with:
           method: kubeconfig
-          kubeconfig: ${{ secrets.kube_config }}
+          kubeconfig: ${{ env.DYNAMIC_KUBECONFIG }}
 
       - name: Add kubectl
         uses: azure/setup-kubectl@v2.0

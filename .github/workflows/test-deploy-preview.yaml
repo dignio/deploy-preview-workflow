@@ -14,12 +14,10 @@ jobs:
     with:
       app_name: workflows
       service_type: webservice
-      port: 80
+      port: 3000
+      aws_role: arn:aws:iam::387308402250:role/github_actions_kubernetes_deployment_development
 
     secrets:
-      aws_access_key_id: ${{ secrets.DEVELOPMENT_GHK8S_AWS_ACCESS_KEY_ID }}
-      aws_secret_access_key: ${{ secrets.DEVELOPMENT_GHK8S_AWS_SECRET_KEY_ID }}
-      kube_config: ${{ secrets.KUBE_CONFIG_DEV }}
       github_app_private_key: ${{ secrets.DIGNIO_GH_APP_PRIVATE_KEY }}
 
   check-outputs:
