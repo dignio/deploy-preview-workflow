@@ -21,15 +21,13 @@ jobs:
       app_name: prevent-ui
       app_name_postfix: storybook
       service_type: webservice
+      aws_role: arn:aws:iam::<org_id>:role/github_actions_kubernetes_deployment_development
       port: 80
       dockerfile: Dockerfile
       docker_build_args: |
         "API_BASE_PATH=https://dev.dignio.com/api"
       path: /
     secrets:
-      aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      kube_config: ${{ secrets.KUBE_CONFIG }}
       github_app_private_key: ${{ secrets.GITHUB_APP_PRIVATE_KEY }}
 ```
 
