@@ -21,7 +21,7 @@ jobs:
       app_name: prevent-ui
       app_name_postfix: storybook
       service_type: webservice
-      aws_role: arn:aws:iam::<org_id>:role/github_actions_kubernetes_deployment_development
+      aws_role: arn:aws:iam::<account_id>:role/github_actions_kubernetes_deployment_development
       port: 80
       dockerfile: Dockerfile
       docker_build_args: |
