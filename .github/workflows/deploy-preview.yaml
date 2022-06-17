@@ -142,7 +142,7 @@ jobs:
             ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.INSTANCE }}-${{ inputs.app_name_postfix }}-${{ steps.app_name.outputs.full_name }}-${{ steps.short_id.outputs.sha }}
 
       - name: Deploy the service to Kubernetes
-        uses: dignio/deploy-service@v3
+        uses: dignio/deploy-service@PLAT-645/override-fargate
         with:
           app_name: ${{ steps.app_name.outputs.full_name }}
           service_type: ${{ inputs.service_type }}
