@@ -8,7 +8,7 @@ app_port=$3
 app_path="$4"
 
 # Check if the ingress host exists
-EXIST=$(kubectl get ingress preview-ingress --namespace=$namespace --output=json | jq '.spec.rules | map(.host == "'"$full_name"'.preview.dignio.dev") | index(true)')
+EXIST=$(kubectl get ingress previews-ingress --namespace=$namespace --output=json | jq '.spec.rules | map(.host == "'"$full_name"'.preview.dignio.dev") | index(true)')
 
 
 # If the preview ingress does not have the host name, add it.
@@ -58,7 +58,7 @@ patch=$(cat <<EOF | tr -d '\n'
 EOF
 )
 
-    kubectl patch ingress preview-ingress --namespace=$namespace --type='json' -p="$patch"
+    kubectl patch ingress previews-ingress --namespace=$namespace --type='json' -p="$patch"
 else
     echo "Preview URL already exists. Skipping."
 fi
