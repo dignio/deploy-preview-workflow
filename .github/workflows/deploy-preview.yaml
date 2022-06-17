@@ -69,7 +69,7 @@ permissions:
 env:
   REGION: eu-north-1
   NAMESPACE: preview
-  INSTANCE: development
+  INSTANCE: previews
   UTILITIES: .dignio-workflows/utilities
   CLUSTER_NAME: dev-k8s
 
