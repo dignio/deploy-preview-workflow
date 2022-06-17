@@ -94,6 +94,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: dignio/workflows
+          branch: PLAT-645/override-fargate # remove this before merging
           path: ".dignio-workflows"
 
       # === github.head_ref has to be used to get the branch name while in PR state
