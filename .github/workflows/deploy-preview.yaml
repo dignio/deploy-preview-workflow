@@ -68,7 +68,7 @@ permissions:
 # Predefined environment variables used as default values
 env:
   REGION: eu-north-1
-  NAMESPACE: preview
+  NAMESPACE: previews
   INSTANCE: previews
   UTILITIES: .dignio-workflows/utilities
   CLUSTER_NAME: dev-k8s
