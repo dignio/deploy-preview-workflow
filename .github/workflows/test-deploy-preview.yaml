@@ -16,6 +16,7 @@ jobs:
       service_type: webservice
       port: 3000
       aws_role: arn:aws:iam::387308402250:role/github_actions_kubernetes_deployment_development
+      fargate: false
 
     secrets:
       github_app_private_key: ${{ secrets.DIGNIO_GH_APP_PRIVATE_KEY }}
