@@ -40,6 +40,11 @@ on:
         required: false
         type: string
         default: /
+      fargate:
+        description: If the deployment should use fargate
+        required: false
+        type: boolean
+        default: true
 
     # Secrets
     secrets:
@@ -150,6 +155,7 @@ jobs:
           replicas: 1
           port: ${{ inputs.port }}
           container_port: ${{ inputs.port }}
+          fargate: ${{ inputs.fargate }}
 
       # === This will run a kubectl request to
       # 1. fetch the index of the preview host to check the existence
