@@ -91,7 +91,7 @@ jobs:
     steps:
       # ===  Check out the current repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       # ===  Check out dignio workflow repo for the utilities folder
       - name: Checkout dignio/workflow repository
