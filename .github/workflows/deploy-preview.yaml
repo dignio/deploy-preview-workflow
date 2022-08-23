@@ -95,7 +95,7 @@ jobs:
 
       # ===  Check out dignio workflow repo for the utilities folder
       - name: Checkout dignio/workflow repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3.0.1
         with:
           ref: PLAT-741-override-hostname-in-previews
           repository: dignio/workflows
@@ -210,7 +210,7 @@ jobs:
     steps:
       # ===  Check out dignio workflow repo for the utilities folder
       - name: Checkout dignio/workflow repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3.0.1
         with:
           ref: PLAT-741-override-hostname-in-previews
           repository: dignio/workflows
