@@ -9,7 +9,7 @@ kebab_branch_name=$4
 
 
 
-if [ ! -z "$app_name_postfix" ]
+if [ ! -z "$override_hostname" ]
 then
     full_app_name="$app_name"
     # Prepend the postfix if it exists
