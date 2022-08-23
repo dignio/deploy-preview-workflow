@@ -45,6 +45,10 @@ on:
         required: false
         type: boolean
         default: true
+      override_hostname:
+        description: Allows choosing another hostname for previews. Example- <override_hostname>_previews.dignio.dev
+        required: false
+        type: string
 
     # Secrets
     secrets:
@@ -220,7 +224,7 @@ jobs:
       # === Create the full app name for docker images and manifests
       - name: Create full app name
         id: app_name
-        run: bash ${{ env.UTILITIES }}/create-full-app-name.sh "${{ inputs.app_name }}" "${{ inputs.app_name_postfix }}" "${{ steps.letter_case.outputs.kebab }}"
+        run: bash ${{ env.UTILITIES }}/create-full-app-name.sh "${{ inputs.app_name }}" "${{ inputs.app_name_postfix }}" "${{ inputs.override_hostname }}" "${{ steps.letter_case.outputs.kebab }}"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
