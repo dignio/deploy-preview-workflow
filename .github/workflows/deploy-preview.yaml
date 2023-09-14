@@ -247,7 +247,7 @@ jobs:
           kubeconfig: ${{ env.DYNAMIC_KUBECONFIG }}
 
       - name: Add kubectl
-        uses: azure/setup-kubectl@v2.0
+        uses: azure/setup-kubectl@v3.0
         with:
           version: "v1.22.0"
 
