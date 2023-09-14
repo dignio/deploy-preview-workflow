@@ -170,18 +170,6 @@ jobs:
       - name: Check if the preview URL is ready
         run: bash ${{ env.UTILITIES }}/is-preview-host-ready.sh ${{ steps.app_name.outputs.full_name }} ${{ inputs.path }}
 
-      # === Create a GitHub IAT token for the Dignio app.
-      # This is kind of stupid because the only reason we're doing
-      # this is to get a Dignio icon on the Preview check. Still,
-      # it'll look great.
-      - name: Create GitHub IAT token
-        uses: cybozu/octoken-action@v1
-        id: create-iat
-        with:
-          github_app_id: 100263
-          github_app_private_key: ${{ secrets.github_app_private_key }}
-          target_account: dignio
-
       - name: Create a commit status with the Deploy Preview URL
         uses: octokit/request-action@v2.x
         id: create_commit_status
