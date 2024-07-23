@@ -70,7 +70,7 @@ jobs:
           sparse-checkout: |
             argo/overlays/preview/app
           path: manifests
-          token: ${{ inputs.github_token }}
+        #   token: ${{ inputs.github_token }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
