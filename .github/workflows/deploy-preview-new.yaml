@@ -23,7 +23,7 @@ on:
         type: string
         required: true
     secrets:
-      github_token:
+      system_token:
         description: GitHub token
         required: true
 
@@ -112,7 +112,7 @@ jobs:
           sparse-checkout: |
             argo/overlays/preview/app
           path: manifests
-          token: ${{ secrets.github_token }}
+          token: ${{ secrets.system_token }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
