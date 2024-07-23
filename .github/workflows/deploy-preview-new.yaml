@@ -149,11 +149,11 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ env.KUBECONFIG }}
 
-      - name: Install Kustomize
-        shell: bash
-        run: |
-          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-          mv kustomize /usr/local/bin/
+    #   - name: Install Kustomize
+    #     shell: bash
+    #     run: |
+    #       curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+    #       mv kustomize /usr/local/bin/
 
       - name: Update Kustomize manifests
         shell: bash
@@ -163,8 +163,14 @@ jobs:
           kustomize edit set namesuffix -- -${{ needs.setup.outputs.pr_name }}
           kustomize edit set image ${{ inputs.app_name }}=${{ needs.build_and_push.outputs.metadata.tags }}
 
+      - name: Create Kubernetes manifests
+        id: bake
+        uses: azure/k8s-bake@v3
+        with:
+            renderEngine: 'kustomize'
+            kustomizationPath: './manifests/argo/overlays/preview/app'
+
       - name: Deploy preview to EKS
-        shell: bash
-        working-directory: manifests/argo/overlays/preview/app
-        run: |
-          kubectl apply -k .
+        uses: Azure/k8s-deploy@v5
+        with:
+          manifests: ${{ steps.bake.outputs.bakedManifest }}
