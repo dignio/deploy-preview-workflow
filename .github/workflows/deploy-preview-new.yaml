@@ -62,16 +62,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout Kubernetes repo
-        uses: actions/checkout@v4
-        with:
-          repository: dignio/kubernetes
-          ref: DEVEX-356-fix-preview-functionality
-          sparse-checkout: |
-            argo/overlays/preview/app
-          path: manifests
-        #   token: ${{ inputs.github_token }}
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -113,6 +103,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup, build_and_push]
     steps:
+      - name: Checkout Kubernetes repo
+        uses: actions/checkout@v4
+        with:
+          repository: dignio/kubernetes
+          ref: DEVEX-356-fix-preview-functionality
+          sparse-checkout: |
+            argo/overlays/preview/app
+          path: manifests
+        #   token: ${{ inputs.github_token }}
+        
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
         with:
