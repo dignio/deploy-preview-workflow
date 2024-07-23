@@ -22,10 +22,10 @@ on:
         description: Build arguments to pass to the Docker build
         type: string
         required: true
-      github_token:
-        description: GitHub token
-        type: string
-        required: true
+    #   github_token:
+    #     description: GitHub token
+    #     type: string
+    #     required: true
 
     outputs:
       preview_url:
