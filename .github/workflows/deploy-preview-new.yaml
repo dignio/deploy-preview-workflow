@@ -111,6 +111,7 @@ jobs:
           ref: DEVEX-356-fix-preview-functionality
           sparse-checkout: |
             argo/overlays/preview/app
+            argo/base/prevent-ui
           path: manifests
           token: ${{ secrets.system_token }}
 
