@@ -99,6 +99,7 @@ jobs:
           build-args: ${{ inputs.docker_build_args }}
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
+
   deploy_on_eks:
     runs-on: ubuntu-latest
     needs: [setup, build_and_push]
@@ -112,7 +113,14 @@ jobs:
             argo/overlays/preview/app
           path: manifests
         #   token: ${{ inputs.github_token }}
-        
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ inputs.aws_role }}
+          role-session-name: GithubActionsSession
+          aws-region: ${{ inputs.aws_region }}
+
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
         with:
