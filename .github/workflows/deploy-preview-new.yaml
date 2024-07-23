@@ -22,10 +22,10 @@ on:
         description: Build arguments to pass to the Docker build
         type: string
         required: true
-    #   github_token:
-    #     description: GitHub token
-    #     type: string
-    #     required: true
+      github_token:
+        description: GitHub token
+        type: string
+        required: true
 
     outputs:
       preview_url:
@@ -112,7 +112,7 @@ jobs:
           sparse-checkout: |
             argo/overlays/preview/app
           path: manifests
-        #   token: ${{ inputs.github_token }}
+          token: ${{ inputs.github_token }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
