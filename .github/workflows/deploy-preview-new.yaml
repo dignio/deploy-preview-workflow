@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     outputs:
-      tags: ${{ steps.metadata.outputs.labels }}
+      tags: ${{ steps.metadata.outputs.tags }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
