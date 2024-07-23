@@ -151,7 +151,7 @@ jobs:
 
       - name: Update Kustomize manifests
         shell: bash
-        working-directory: manifests/
+        working-directory: manifests/argo/overlays/preview/app
         run: |
           sed -i "s/pr-placeholder/${{ needs.setup.outputs.pr_name }}/g" routes.yaml
           kustomize edit set namesuffix -- -${{ needs.setup.outputs.pr_name }}
@@ -159,6 +159,6 @@ jobs:
 
       - name: Deploy preview to EKS
         shell: bash
-        working-directory: manifests/
+        working-directory: manifests/argo/overlays/preview/app
         run: |
           kubectl apply -k .
