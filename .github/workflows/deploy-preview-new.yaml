@@ -10,6 +10,10 @@ on:
         description: AWS role to assume during deployment
         type: string
         required: true
+      aws_eks_role:
+        description: AWS role that is used to deploy on EKS
+        type: string
+        required: true
       aws_region:
         description: The AWS region where cluster is located
         type: string
@@ -97,6 +101,7 @@ jobs:
           push: true
           provenance: false
           build-args: ${{ inputs.docker_build_args }}
+          # Add cache-from to speed up the build
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
 
@@ -130,7 +135,7 @@ jobs:
       - name: Generate kubeconfig for EKS and set as ENV
         shell: bash
         run: |
-          aws eks update-kubeconfig --name=${{ inputs.cluster_name }} --region=${{ inputs.aws_region }} --role-arn=${{ inputs.aws_role }} --kubeconfig="./kubeconfig"
+          aws eks update-kubeconfig --name=${{ inputs.cluster_name }} --region=${{ inputs.aws_region }} --role-arn=${{ inputs.aws_eks_role }} --kubeconfig="./kubeconfig"
 
           kubeconfig=$(cat ./kubeconfig)
 
