@@ -163,6 +163,7 @@ jobs:
         run: |
           sed -i "s/pr-placeholder/${{ needs.setup.outputs.pr_name }}/g" routes.yaml
           kustomize edit set namesuffix -- -${{ needs.setup.outputs.pr_name }}
+          echo "${{ needs.build_and_push.outputs.IMAGE_TAG }}"
           kustomize edit set image ${{ inputs.app_name }}=${{ needs.build_and_push.outputs.IMAGE_TAG }}
 
       - name: Create Kubernetes manifests
