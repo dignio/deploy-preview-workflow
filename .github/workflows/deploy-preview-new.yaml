@@ -124,7 +124,7 @@ jobs:
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
         with:
-          version: "1.30.2"
+          version: "v1.30.2"
 
       - name: Generate kubeconfig for EKS and set as ENV
         shell: bash
