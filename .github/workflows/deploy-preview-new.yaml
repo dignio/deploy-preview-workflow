@@ -138,7 +138,7 @@ jobs:
       - name: Generate kubeconfig for EKS and set as ENV
         shell: bash
         run: |
-          aws eks update-kubeconfig --name=${{ inputs.cluster_name }} --region=${{ inputs.aws_region }} --role-arn=${{ inputs.aws_role }} --kubeconfig="/tmp/kubeconfig"
+          aws eks update-kubeconfig --name=${{ inputs.cluster_name }} --region=${{ inputs.aws_region }} --role-arn=${{ inputs.aws_eks_role }} --kubeconfig="/tmp/kubeconfig"
 
           kubeconfig=$(cat /tmp/kubeconfig)
 
