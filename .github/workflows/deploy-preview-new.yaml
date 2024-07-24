@@ -64,7 +64,6 @@ jobs:
     needs: setup
     outputs:
       IMAGE_TAG: ${{ steps.metadata.outputs.tags }}
-      ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -139,9 +138,9 @@ jobs:
       - name: Generate kubeconfig for EKS and set as ENV
         shell: bash
         run: |
-          aws eks update-kubeconfig --name=${{ inputs.cluster_name }} --region=${{ inputs.aws_region }} --role-arn=${{ inputs.aws_eks_role }} --kubeconfig="./kubeconfig"
+          aws eks update-kubeconfig --name=${{ inputs.cluster_name }} --region=${{ inputs.aws_region }} --role-arn=${{ inputs.aws_eks_role }} --kubeconfig="/tmp/kubeconfig"
 
-          kubeconfig=$(cat ./kubeconfig)
+          kubeconfig=$(cat /tmp/kubeconfig)
 
           echo "KUBECONFIG<<EOF" >> $GITHUB_ENV
           echo "$kubeconfig" >> $GITHUB_ENV
@@ -165,8 +164,7 @@ jobs:
         run: |
           sed -i "s/pr-placeholder/${{ needs.setup.outputs.pr_name }}/g" routes.yaml
           kustomize edit set namesuffix -- -${{ needs.setup.outputs.pr_name }}
-          kustomize edit set image ${{ inputs.app_name }}=${{ needs.build_and_push.outputs.ECR_REGISTRY}}/${{ inputs.app_name }}:preview-${{ needs.setup.outputs.pr_name }}
-        #   kustomize edit set image ${{ inputs.app_name }}=${{ needs.build_and_push.outputs.IMAGE_TAG }}
+          kustomize edit set image ${{ inputs.app_name }}=${{ needs.build_and_push.outputs.IMAGE_TAG }}
 
       - name: Create Kubernetes manifests
         id: bake
