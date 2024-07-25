@@ -26,6 +26,10 @@ on:
         description: Build arguments to pass to the Docker build
         type: string
         required: true
+      namespace:
+        description: The namespace in which to deploy the preview
+        type: string
+        required: true
     secrets:
       system_token:
         description: GitHub token
@@ -98,6 +102,7 @@ jobs:
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
+        if: github.event.action != 'closed'
         with:
           context: .
           file: ./Dockerfile
@@ -175,6 +180,13 @@ jobs:
 
       - name: Deploy preview to EKS
         uses: Azure/k8s-deploy@v5
+        if: github.event.action != 'closed'
         with:
           manifests: ${{ steps.bake.outputs.manifestsBundle }}
-          namespace: preview
+          namespace: ${{ inputs.namespace }}
+
+      - name: Remove preview from EKS
+        if: github.event.action == 'closed'
+        shell: bash
+        run: |
+          kubectl delete -f ${{ steps.bake.outputs.manifestsBundle }} --namespace=${{ inputs.namespace }}
