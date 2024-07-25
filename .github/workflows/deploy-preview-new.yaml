@@ -187,7 +187,6 @@ jobs:
           namespace: ${{ inputs.namespace }}
 
       - name: Remove preview from EKS
-        if: github.event.action == 'closed'
         shell: bash
         run: |
           kubectl delete -f ${{ steps.bake.outputs.manifestsBundle }} --namespace=${{ inputs.namespace }}
