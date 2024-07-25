@@ -109,7 +109,8 @@ jobs:
           push: true
           provenance: false
           build-args: ${{ inputs.docker_build_args }}
-          # Add cache-from to speed up the build
+          cache-from: type=registry,ref=${{ steps.metadata.outputs.labels }}
+          cache-to: type=inline
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
 
