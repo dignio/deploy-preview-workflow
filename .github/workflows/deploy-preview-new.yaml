@@ -158,12 +158,6 @@ jobs:
           method: kubeconfig
           kubeconfig: ${{ env.KUBECONFIG }}
 
-    #   - name: Install Kustomize
-    #     shell: bash
-    #     run: |
-    #       curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
-    #       mv kustomize /usr/local/bin/
-
       - name: Update Kustomize manifests
         shell: bash
         working-directory: manifests/argo/overlays/preview/app
@@ -176,8 +170,8 @@ jobs:
         id: bake
         uses: azure/k8s-bake@v3
         with:
-            renderEngine: 'kustomize'
-            kustomizationPath: './manifests/argo/overlays/preview/app'
+          renderEngine: "kustomize"
+          kustomizationPath: "./manifests/argo/overlays/preview/app"
 
       - name: Deploy preview to EKS
         uses: Azure/k8s-deploy@v5
@@ -187,6 +181,16 @@ jobs:
           namespace: ${{ inputs.namespace }}
 
       - name: Remove preview from EKS
+        if: github.event.action == 'closed'
         shell: bash
         run: |
           kubectl delete -f ${{ steps.bake.outputs.manifestsBundle }} --namespace=${{ inputs.namespace }}
+
+  # preview-status:
+  #   runs-on: ubuntu-latest
+  #   needs: [deploy_on_eks]
+  #   steps:
+  #     - name: Preview Healthcheck
+
+  #     - name: Create a PR status
+  #       continue-on-error: true
