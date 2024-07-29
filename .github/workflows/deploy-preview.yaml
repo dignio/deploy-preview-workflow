@@ -209,7 +209,7 @@ jobs:
           state: success
           accept: application/vnd.github.v3+json
           route: POST /repos/{owner}/{repo}/statuses/{sha}
-          target_url: https://${{ needs.setup.outputs.pr_name }}.preview.dignio.dev
+          target_url: ${{ needs.setup.outputs.preview_url }}
           sha: ${{ github.event.pull_request.head.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.system_token }}
