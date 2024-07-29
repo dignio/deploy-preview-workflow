@@ -186,11 +186,30 @@ jobs:
         run: |
           kubectl delete -f ${{ steps.bake.outputs.manifestsBundle }} --namespace=${{ inputs.namespace }}
 
-  # preview-status:
-  #   runs-on: ubuntu-latest
-  #   needs: [deploy_on_eks]
-  #   steps:
-  #     - name: Preview Healthcheck
+  preview-status:
+    runs-on: ubuntu-latest
+    needs: [setup, deploy_on_eks]
+    steps:
+      - name: Preview Healthcheck
+        id: healthcheck
+        shell: bash
+        run: |
+          curl --retry 3 --retry-connrefused --retry-delay 5 --retry-max-time 30 -s -o /dev/null -w "%{http_code}" ${{ needs.setup.outputs.preview_url }}
 
-  #     - name: Create a PR status
-  #       continue-on-error: true
+      - name: Create a PR status
+        continue-on-error: true
+        uses: octokit/request-action@v2.x
+        id: create_commit_status
+        with:
+          name: "${{ needs.setup.outputs.pr_name }} deploy preview"
+          description: Deploy Preview ready! Click Details to browse to it.
+          context: "Preview - ${{ needs.setup.outputs.pr_name }}"
+          owner: dignio
+          repo: ${{ github.event.repository.name }}
+          state: success
+          accept: application/vnd.github.v3+json
+          route: POST /repos/{owner}/{repo}/statuses/{sha}
+          target_url: https://${{ needs.setup.outputs.pr_name }}.preview.dignio.dev
+          sha: ${{ github.event.pull_request.head.sha }}
+        # env:
+        #   GITHUB_TOKEN: ${{ secrets.system_token }}
