@@ -22,6 +22,10 @@ on:
         description: The name of the EKS cluster on which to deploy the preview
         type: string
         required: true
+      dockerfile:
+        description: The path to the Dockerfile
+        type: string
+        required: true
       docker_build_args:
         description: Build arguments to pass to the Docker build
         type: string
@@ -105,7 +109,7 @@ jobs:
         if: github.event.action != 'closed'
         with:
           context: .
-          file: ./Dockerfile
+          file: ${{ inputs.dockerfile }}
           push: true
           provenance: false
           build-args: ${{ inputs.docker_build_args }}
