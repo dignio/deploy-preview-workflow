@@ -124,8 +124,8 @@ jobs:
           repository: dignio/kubernetes
           ref: DEVEX-356-fix-preview-functionality
           sparse-checkout: |
-            argo/overlays/preview/app
-            argo/base/prevent-ui
+            argo/overlays/preview/${{ inputs.app_name }}
+            argo/base/${{ inputs.app_name }}
           path: manifests
           token: ${{ secrets.system_token }}
 
@@ -160,7 +160,7 @@ jobs:
 
       - name: Update Kustomize manifests
         shell: bash
-        working-directory: manifests/argo/overlays/preview/app
+        working-directory: manifests/argo/overlays/preview/${{ inputs.app_name }}
         run: |
           sed -i "s/pr-placeholder/${{ needs.setup.outputs.pr_name }}/g" routes.yaml
           kustomize edit set namesuffix -- -${{ needs.setup.outputs.pr_name }}
@@ -170,7 +170,7 @@ jobs:
       - name: Update annotation timestamp
         if: github.event.action == 'synchronize'
         shell: bash
-        working-directory: manifests/argo/base/prevent-ui
+        working-directory: manifests/argo/overlays/preview/${{ inputs.app_name }}
         run: |
           kustomize edit set annotation kubectl.kubernetes.io/restartedAt:"$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -179,7 +179,7 @@ jobs:
         uses: azure/k8s-bake@v3
         with:
           renderEngine: "kustomize"
-          kustomizationPath: "./manifests/argo/overlays/preview/app"
+          kustomizationPath: "./manifests/argo/overlays/preview/${{ inputs.app_name }}"
 
       - name: Deploy preview to EKS
         uses: Azure/k8s-deploy@v5
