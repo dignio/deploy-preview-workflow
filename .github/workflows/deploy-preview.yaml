@@ -187,6 +187,8 @@ jobs:
         with:
           manifests: ${{ steps.bake.outputs.manifestsBundle }}
           namespace: ${{ inputs.namespace }}
+          annotate-namespace: false
+          annotate-resources: false
 
       - name: Remove preview from EKS
         if: github.event.action == 'closed'
