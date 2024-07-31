@@ -128,9 +128,8 @@ jobs:
           repository: dignio/kubernetes
           ref: DEVEX-356-fix-preview-functionality
           sparse-checkout: |
-            argo/overlays/preview/${{ inputs.app_name }}
+            argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}
             argo/base/${{ inputs.app_name }}
-          path: manifests
           token: ${{ secrets.system_token }}
 
       - name: Configure AWS credentials
@@ -164,7 +163,7 @@ jobs:
 
       - name: Update Kustomize manifests
         shell: bash
-        working-directory: manifests/argo/overlays/preview/${{ inputs.app_name }}
+        working-directory: argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}
         run: |
           sed -i "s/pr-placeholder/${{ needs.setup.outputs.pr_name }}/g" routes.yaml
           kustomize edit set namesuffix -- -${{ needs.setup.outputs.pr_name }}
@@ -174,7 +173,7 @@ jobs:
       - name: Update annotation timestamp
         if: github.event.action == 'synchronize'
         shell: bash
-        working-directory: manifests/argo/overlays/preview/${{ inputs.app_name }}
+        working-directory: argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}
         run: |
           kustomize edit set annotation kubectl.kubernetes.io/restartedAt:"$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -183,7 +182,7 @@ jobs:
         uses: azure/k8s-bake@v3
         with:
           renderEngine: "kustomize"
-          kustomizationPath: "./manifests/argo/overlays/preview/${{ inputs.app_name }}"
+          kustomizationPath: "./argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}"
 
       - name: Deploy preview to EKS
         uses: Azure/k8s-deploy@v5
