@@ -165,7 +165,7 @@ jobs:
         shell: bash
         working-directory: argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}
         run: |
-          sed -i "s/pr-placeholder/${{ needs.setup.outputs.pr_name }}/g" routes.yaml
+          yq e -i '.spec.routes[0].match |= sub("pr-placeholder", "${{ needs.setup.outputs.pr_name }}")' routes.yaml
           kustomize edit set namesuffix -- -${{ needs.setup.outputs.pr_name }}
           kustomize edit set image ${{ inputs.app_name }}=${{ needs.build_and_push.outputs.IMAGE_TAG }}
 
