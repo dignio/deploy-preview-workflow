@@ -25,11 +25,15 @@ on:
       dockerfile:
         description: The path to the Dockerfile
         type: string
-        required: true
+        required: false
       docker_build_args:
         description: Build arguments to pass to the Docker build
         type: string
-        required: true
+        required: false
+      image_tag:
+        description: The tag of the Docker image
+        type: string
+        required: false
       namespace:
         description: The namespace in which to deploy the preview
         type: string
@@ -70,8 +74,9 @@ jobs:
   build_and_push:
     runs-on: ubuntu-latest
     needs: setup
+    if: ${{ inputs.image_tag == '' }}
     outputs:
-      IMAGE_TAG: ${{ steps.metadata.outputs.tags }}
+      image_tag: ${{ steps.metadata.outputs.tags }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -122,6 +127,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup, build_and_push]
     steps:
+      # Or if build_and_push job was not skipped
+      - name: Set image tag
+        shell: bash
+        run: |
+          if [ -z "${{ inputs.image_tag }}" ]; then
+            echo "IMAGE_TAG=${{ needs.build_and_push.outputs.image_tag }}" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAG=${{ inputs.image_tag }}" >> $GITHUB_ENV
+          fi
+
       - name: Checkout Kubernetes repo
         uses: actions/checkout@v4
         with:
@@ -167,7 +182,7 @@ jobs:
         run: |
           yq e -i '.spec.routes[0].match |= sub("pr-placeholder", "${{ needs.setup.outputs.pr_name }}")' routes.yaml
           kustomize edit set namesuffix -- -${{ needs.setup.outputs.pr_name }}
-          kustomize edit set image ${{ inputs.app_name }}=${{ needs.build_and_push.outputs.IMAGE_TAG }}
+          kustomize edit set image ${{ inputs.app_name }}=${{ env.IMAGE_TAG }}
 
       # Update the annotation timestamp to trigger a rolling update and image pull
       - name: Update annotation timestamp
