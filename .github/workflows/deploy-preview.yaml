@@ -128,6 +128,14 @@ jobs:
     if: always()
     needs: [setup, build_and_push]
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ inputs.aws_role }}
+          role-session-name: GithubActionsSession
+          aws-region: ${{ inputs.aws_region }}
+          mask-aws-account-id: false
+
       - name: Login to AWS ECR
         id: login-ecr
         if: ${{ inputs.image_tag == '' }}
@@ -153,13 +161,6 @@ jobs:
             argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}
             argo/base/${{ inputs.app_name }}
           token: ${{ secrets.system_token }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: ${{ inputs.aws_role }}
-          role-session-name: GithubActionsSession
-          aws-region: ${{ inputs.aws_region }}
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
