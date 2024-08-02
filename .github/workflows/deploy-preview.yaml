@@ -138,7 +138,7 @@ jobs:
 
       - name: Login to AWS ECR
         id: login-ecr
-        if: ${{ inputs.image_tag == '' }}
+        if: ${{ inputs.image_tag != '' }}
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set image tag
