@@ -125,6 +125,7 @@ jobs:
 
   deploy_on_eks:
     runs-on: ubuntu-latest
+    if: always()
     needs: [setup, build_and_push]
     steps:
       # Or if build_and_push job was not skipped
