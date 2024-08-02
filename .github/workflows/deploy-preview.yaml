@@ -128,14 +128,20 @@ jobs:
     if: always()
     needs: [setup, build_and_push]
     steps:
-      # Or if build_and_push job was not skipped
+      - name: Login to AWS ECR
+        id: login-ecr
+        if: ${{ inputs.image_tag == '' }}
+        uses: aws-actions/amazon-ecr-login@v2
+
       - name: Set image tag
         shell: bash
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           if [ -z "${{ inputs.image_tag }}" ]; then
             echo "IMAGE_TAG=${{ needs.build_and_push.outputs.image_tag }}" >> $GITHUB_ENV
           else
-            echo "IMAGE_TAG=${{ inputs.image_tag }}" >> $GITHUB_ENV
+            echo "IMAGE_TAG=${{ env.ECR_REGISTRY }}/${{ inputs.app_name }}:${{ inputs.image_tag }}" >> $GITHUB_ENV
           fi
 
       - name: Checkout Kubernetes repo
