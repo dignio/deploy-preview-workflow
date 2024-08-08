@@ -66,10 +66,15 @@ jobs:
         run: |
           echo "PR_NAME=pr-$(echo "$GITHUB_REF" | awk -F / '{print $3}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
+      - name: Short SHA
+        id: short_sha
+        shell: bash
+        run: echo "SHORT_SHA=$(git rev-parse --short ${{ github.event.pull_request.base.sha }})" >> $GITHUB_OUTPUT
+
       - name: Print preview URL
         id: print-preview-url
         shell: bash
-        run: echo "preview_url=https://${{ steps.sanitize_pr_name.outputs.PR_NAME }}.preview-new.dignio.dev" >> $GITHUB_OUTPUT
+        run: echo "preview_url=https://${{ steps.sanitize_pr_name.outputs.PR_NAME }}-${{ steps.short_sha.outputs.SHORT_SHA }}.preview-new.dignio.dev" >> $GITHUB_OUTPUT
 
   build_and_push:
     runs-on: ubuntu-latest
