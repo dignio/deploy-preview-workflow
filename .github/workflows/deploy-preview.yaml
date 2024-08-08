@@ -58,8 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       preview_url: ${{ steps.print-preview-url.outputs.preview_url }}
-      pr_name: ${{ steps.sanitize_pr_name.outputs.PR_NAME }}
-      short_sha: ${{ steps.short_sha.outputs.SHORT_SHA }}
+      pr_name: ${{ steps.sanitize_pr_name.outputs.PR_NAME }}-${{ steps.short_sha.outputs.SHORT_SHA }}
     steps:
       - name: Sanitize pull request Name
         id: sanitize_pr_name
@@ -194,7 +193,7 @@ jobs:
         shell: bash
         working-directory: argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}
         run: |
-          yq e -i '.spec.routes[0].match |= sub("pr-placeholder", "${{ needs.setup.outputs.pr_name }}-${{ needs.setup.outputs.short_sha }}")' routes.yaml
+          yq e -i '.spec.routes[0].match |= sub("pr-placeholder", "${{ needs.setup.outputs.pr_name }}")' routes.yaml
           kustomize edit set namesuffix -- -${{ needs.setup.outputs.pr_name }}
           kustomize edit set image ${{ inputs.app_name }}=${{ env.IMAGE_TAG }}
 
