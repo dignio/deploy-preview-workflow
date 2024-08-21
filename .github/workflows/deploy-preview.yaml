@@ -70,7 +70,7 @@ jobs:
         id: unique_identifier
         shell: bash
         run: |
-          echo "unique_id=$(echo "${{ github.event.pull_request.head.ref }}" | base64 | tr '+/' '-.' | tr -d '=')" >> $GITHUB_OUTPUT
+          echo "unique_id=$(echo "${{ github.event.pull_request.head.ref }}" | base64 -w0 | tr '+/' '-.' | tr -d '=' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Print preview URL
         id: print-preview-url
