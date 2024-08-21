@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       preview_url: ${{ steps.print-preview-url.outputs.preview_url }}
-      pr_name: ${{ steps.sanitize_pr_name.outputs.PR_NAME }}-${{ steps.short_sha.outputs.SHORT_SHA }}
+      pr_name: ${{ steps.sanitize_pr_name.outputs.PR_NAME }}-${{ steps.unique_identifier.outputs.unique_id }}
     steps:
       - name: Sanitize pull request Name
         id: sanitize_pr_name
@@ -66,15 +66,16 @@ jobs:
         run: |
           echo "PR_NAME=pr-$(echo "$GITHUB_REF" | awk -F / '{print $3}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
-      - name: Short SHA
-        id: short_sha
+      - name: Unique identifier
+        id: unique_identifier
         shell: bash
-        run: echo "SHORT_SHA=$(echo ${{ github.event.pull_request.base.sha }} | cut -c 1-7)" >> $GITHUB_OUTPUT
+        run: |
+          echo "unique_id=$(echo "${{ github.event.pull_request.head.ref }}" | base64 | tr '+/' '-.' | tr -d '=')" >> $GITHUB_OUTPUT
 
       - name: Print preview URL
         id: print-preview-url
         shell: bash
-        run: echo "preview_url=https://${{ steps.sanitize_pr_name.outputs.PR_NAME }}-${{ steps.short_sha.outputs.SHORT_SHA }}.preview-new.dignio.dev" >> $GITHUB_OUTPUT
+        run: echo "preview_url=https://${{ steps.sanitize_pr_name.outputs.PR_NAME }}-${{ steps.unique_identifier.outputs.unique_id }}.preview-new.dignio.dev" >> $GITHUB_OUTPUT
 
   build_and_push:
     runs-on: ubuntu-latest
