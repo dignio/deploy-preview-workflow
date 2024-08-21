@@ -59,18 +59,24 @@ jobs:
     outputs:
       preview_url: ${{ steps.print-preview-url.outputs.preview_url }}
       pr_number: ${{ steps.sanitize_pr_name.outputs.PR_ID }}
-      pr_name: ${{ steps.sanitize_pr_name.outputs.PR_ID }}-${{ inputs.app_name }}
+      pr_name: ${{ steps.sanitize_pr_name.outputs.PR_ID }}-${{ steps.repo_name.outputs.REPO_NAME }}
     steps:
       - name: Sanitize pull request Name
         id: sanitize_pr_name
         shell: bash
         run: |
           echo "PR_ID=pr-$(echo "$GITHUB_REF" | awk -F / '{print $3}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      
+      - name: Repository name
+        id: repo_name
+        shell: bash
+        run: |
+          echo "REPO_NAME=$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}')" >> $GITHUB_OUTPUT
 
       - name: Print preview URL
         id: print-preview-url
         shell: bash
-        run: echo "preview_url=https://${{ steps.sanitize_pr_name.outputs.PR_ID }}-${{ inputs.app_name }}.preview-new.dignio.dev" >> $GITHUB_OUTPUT
+        run: echo "preview_url=https://${{ steps.sanitize_pr_name.outputs.PR_ID }}-${{ steps.repo_name.outputs.REPO_NAME }}.preview-new.dignio.dev" >> $GITHUB_OUTPUT
 
   build_and_push:
     runs-on: ubuntu-latest
