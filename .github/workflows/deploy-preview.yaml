@@ -127,8 +127,6 @@ jobs:
 
   deploy_on_eks:
     runs-on: ubuntu-latest
-    # Shouldn't always run, only if previous step was successful or image tag is provided
-    if: always()
     needs: [setup, build_and_push]
     steps:
       - name: Configure AWS credentials
