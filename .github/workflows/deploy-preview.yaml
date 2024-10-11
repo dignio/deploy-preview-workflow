@@ -38,6 +38,10 @@ on:
         description: Whether to create ingress routes for the preview
         type: boolean
         required: true
+      branch:
+        description: The branch to build image from
+        type: string
+        required: false
     secrets:
       system_token:
         description: GitHub token
@@ -86,6 +90,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          repository: dignio/${{ inputs.app_name }}
+          ref: ${{ inputs.branch }}
+          token: ${{ secrets.system_token }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
