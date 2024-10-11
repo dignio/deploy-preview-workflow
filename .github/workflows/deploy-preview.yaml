@@ -175,7 +175,6 @@ jobs:
         shell: bash
         working-directory: argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}
         run: |
-          sed -i 's/# - routes.yaml/- routes.yaml/' kustomization.yaml
           yq e -i '.spec.routes[].match |= sub("pr-placeholder", "${{ needs.setup.outputs.pr_name }}")' routes.yaml
 
       - name: Update Kustomize manifests
