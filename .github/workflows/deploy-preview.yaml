@@ -224,7 +224,7 @@ jobs:
         id: healthcheck
         shell: bash
         run: |
-          curl --retry 3 --retry-connrefused --retry-delay 5 --retry-max-time 30 -s -o /dev/null -w "%{http_code}" ${{ needs.setup.outputs.preview_url }}
+          curl -f --retry 3 --retry-connrefused --retry-delay 5 --retry-max-time 30 -s -o /dev/null -w "%{http_code}" ${{ needs.setup.outputs.preview_url }}
 
       - name: Create a PR status
         continue-on-error: true
