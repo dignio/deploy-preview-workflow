@@ -175,6 +175,8 @@ jobs:
         run: |
           yq e -i '.spec.routes[].match |= sub("pr-placeholder", "${{ needs.setup.outputs.pr_name }}")' routes.yaml
 
+      # Do not use the `kustomise edit add/set label` because it adds commonLabels (deprecated).
+      # Replace it when commonLabels support is completely dropped.
       - name: Update Kustomize manifests
         shell: bash
         working-directory: argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}
