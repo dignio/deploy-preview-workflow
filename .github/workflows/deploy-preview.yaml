@@ -72,7 +72,7 @@ jobs:
       - name: Print preview URL
         id: print-preview-url
         shell: bash
-        run: echo "preview_url=https://${{ steps.sanitize_pr_name.outputs.PR_ID }}-${{ steps.repo_name.outputs.REPO_NAME }}.preview-new.dignio.dev" >> $GITHUB_OUTPUT
+        run: echo "preview_url=https://${{ steps.sanitize_pr_name.outputs.PR_ID }}-${{ steps.repo_name.outputs.REPO_NAME }}.preview.dignio.dev" >> $GITHUB_OUTPUT
 
   build_and_push:
     runs-on: ubuntu-latest
