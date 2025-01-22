@@ -130,7 +130,7 @@ jobs:
     needs: [setup, build_and_push]
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ inputs.aws_role }}
           role-session-name: GithubActionsSession
