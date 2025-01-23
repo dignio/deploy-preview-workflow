@@ -141,7 +141,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: dignio/kubernetes
-          ref: DEVEX-356-fix-preview-functionality
+          ref: main
           sparse-checkout: |
             argo/cluster/${{ inputs.cluster_name }}/preview/${{ inputs.app_name }}
             argo/base/${{ inputs.app_name }}
