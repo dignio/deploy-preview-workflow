@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       preview_url: ${{ steps.print-preview-url.outputs.preview_url }}
-      pr_name: ${{ github.event.pull_request.number }}-${{ steps.repo_name.outputs.REPO_NAME }}
+      pr_name: "pr-${{ github.event.pull_request.number }}-${{ steps.repo_name.outputs.REPO_NAME }}"
     steps:
       - name: Repository name
         id: repo_name
@@ -65,7 +65,7 @@ jobs:
       - name: Print preview URL
         id: print-preview-url
         shell: bash
-        run: echo "preview_url=https://${{ github.event.pull_request.number }}-${{ steps.repo_name.outputs.REPO_NAME }}.preview.dignio.dev" >> $GITHUB_OUTPUT
+        run: echo "preview_url=https://pr-${{ github.event.pull_request.number }}-${{ steps.repo_name.outputs.REPO_NAME }}.preview.dignio.dev" >> $GITHUB_OUTPUT
 
   build_and_push:
     runs-on: ubuntu-latest
@@ -102,7 +102,7 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=raw,value=preview-${{ github.event.pull_request.number }}
+            type=raw,value=preview-pr-${{ github.event.pull_request.number }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
@@ -224,9 +224,9 @@ jobs:
         uses: octokit/request-action@v2.x
         id: create_commit_status
         with:
-          name: "${{ github.event.pull_request.number }} deploy preview"
+          name: "pr-${{ github.event.pull_request.number }} deploy preview"
           description: Deploy Preview ready! Click Details to browse to it.
-          context: "Preview - ${{ github.event.pull_request.number }}"
+          context: "Preview - pr-${{ github.event.pull_request.number }}"
           owner: dignio
           repo: ${{ github.event.repository.name }}
           state: success
